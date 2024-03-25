@@ -15,7 +15,7 @@ import pandas as pd
 import xmlrunner
 import plotly.graph_objs as go
 
-from test_stochax.config import xml_test_folder, simulate_univariate_prices
+from test_stochax.config import xml_test_folder, simulate_univariate_process
 
 from stochax.calibration_results import CalibrationResult
 
@@ -42,7 +42,7 @@ class MockProcess(object):
 class TestCalibrationResult(unittest.TestCase):
     """A class to test the CalibrationResult object"""
 
-    observations = pd.DataFrame({"obs": simulate_univariate_prices(250)})
+    observations = pd.DataFrame({"obs": simulate_univariate_process(250)})
 
     @classmethod
     def setUpClass(cls):
@@ -50,7 +50,7 @@ class TestCalibrationResult(unittest.TestCase):
         process = MockProcess()
         delta = 1
         cls.method = "fake_bootstrap"
-        bootstrap_results = {k: simulate_univariate_prices(100) for k in process.parameters.keys()}
+        bootstrap_results = {k: simulate_univariate_process(100) for k in process.parameters.keys()}
 
         cls.fit = CalibrationResult(
             process=process,
