@@ -1,25 +1,21 @@
 """
-----------------------------
-test_stochastic_processes.py
-----------------------------
+------------
+test_core.py
+------------
 
-A test to check the test_stochx module
+A test to check the core module
 
 To run the code
-$ python test_stochastic_processes.py
+$ python test_core.py
 """
 
 import unittest
 
-import numpy as np
 import xmlrunner
 
 from test_stochax.config import xml_test_folder
 
 from stochax.core import Bounds, ParameterBound
-
-VERBOSE = True
-rng = np.random.default_rng()
 
 
 class TestParameterBound(unittest.TestCase):

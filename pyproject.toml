@@ -91,5 +91,5 @@ sections = ["FUTURE","STDLIB","THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
 
 [tool.codespell]
 quiet-level = 0
-ignore-words-list = "sur"
+ignore-words-list = "sur,manuel"
 skip = "*.ipynb,*.html,pyproject.toml"

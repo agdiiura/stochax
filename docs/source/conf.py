@@ -37,7 +37,7 @@ except Exception:
     version = "beta"
 
 # -- General configuration ---------------------------------------------------
-
+autodoc_inherit_docstrings = True
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'

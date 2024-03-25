@@ -33,3 +33,6 @@ stochax
    :toctree: stochax/
 
    stochax.core
+   stochax.calibration_results
+   stochax.brownian_motion
+   stochax.mean_reverting
