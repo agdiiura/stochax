@@ -8,4 +8,6 @@ echo ">>> stochax"
 echo ">>>>>>>>>>>>"
 
 
+$COMMAND $FOLDER/test_calibration_results.py
+
 echo "Done!"
