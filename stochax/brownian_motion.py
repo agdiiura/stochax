@@ -3,7 +3,8 @@
 brownian_motion.py
 ------------------
 
-A module for the analysis of time-series as stochastic processes
+A module for simulation and calibration of brownian motion
+stochastic processes
 """
 
 import logging
@@ -161,8 +162,8 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
     .. code-block:: python
 
-        abm = GeometricBrownianMotion(mu=0., sigma=0.5)
-        paths = abm.simulate(
+        gbm = GeometricBrownianMotion(mu=0., sigma=0.5)
+        paths = gbm.simulate(
             initial_value=0.5,
             n_steps=52,
             delta=1/52,
@@ -172,8 +173,8 @@ class GeometricBrownianMotion(ABCStochasticProcess):
     .. code-block:: python
 
         data = pd.read_csv('path/to/data.csv')
-        abm = GeometricBrownianMotion()
-        res = abm.calibrate(data)
+        gbm = GeometricBrownianMotion()
+        res = gbm.calibrate(data)
 
     """
 
