@@ -19,6 +19,7 @@ from numpy.random import RandomState
 from sklearn.utils import Bunch
 from plotly.subplots import make_subplots
 
+__all__ = ["CalibrationResult"]
 logger = logging.getLogger(__name__)
 
 

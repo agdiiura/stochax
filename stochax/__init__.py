@@ -38,7 +38,7 @@ from importlib.metadata import version
 from .core import *
 from .mean_reverting import *
 from .brownian_motion import *
-from .calibration_results import CalibrationResult
+from .calibration_results import *
 
 
 def _read_version():
