@@ -87,6 +87,16 @@ class CalibrationResult(object):
         self._rs = rs
         self._bootstrap_results = pd.DataFrame(bootstrap_results)
 
+        self._msg = f"{self.__class__.__name__}({self._process}, observations.shape={self._observations.shape})"
+
+    def __repr__(self) -> str:
+        """Override the REPL output"""
+        return self._msg
+
+    def __str__(self) -> str:
+        """Override the print output"""
+        return self._msg
+
     def show_parameters(self) -> go.Figure:
         """
         Display parameters and relative errors
