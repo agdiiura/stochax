@@ -62,7 +62,7 @@ class CalibrationResult(object):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        rs: RandomState = RandomState(42),
+        rs: RandomState | int | None = None,
         bootstrap_results: dict | None = None,
     ):
         """
@@ -76,6 +76,15 @@ class CalibrationResult(object):
         :param n_jobs: number of parallel jobs
         :param rs: bootstrap random state
         :param bootstrap_results: a dict contained the results of bootstrap procedure
+
+        Example:
+
+        .. code-block:: python
+
+            ...
+            res = process.calibrate(data)
+            print(res.get_summary())
+
         """
 
         self._process = process

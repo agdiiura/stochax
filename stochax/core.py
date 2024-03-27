@@ -35,7 +35,7 @@ import numpy as np
 import pandas as pd
 
 from joblib import Parallel, delayed
-from scipy.stats import uniform, truncnorm
+from scipy.stats import truncnorm
 from numpy.random import RandomState
 from arch.bootstrap import CircularBlockBootstrap, optimal_block_length
 from scipy.optimize import minimize
@@ -267,14 +267,11 @@ class ABCStochasticProcess(abc.ABC):
 
         for key, val in self.parameters.items():
             if val is None:
-                err = f"`{key}` is None"
-                raise TypeError(err)
+                raise TypeError(f"`{key}` is None")
             elif pd.isnull(val):
-                err = f"`{key}` is NaN"
-                raise TypeError(err)
+                raise TypeError(f"`{key}` is NaN")
             elif np.isinf(val):
-                err = f"`{key}` is Inf"
-                raise TypeError(err)
+                raise TypeError(f"`{key}` is Inf")
 
         self._validate_parameters()
 
@@ -428,7 +425,7 @@ class ABCStochasticProcess(abc.ABC):
         delta: float = 1.0,
         n_boot_resamples: int = 10,
         n_jobs: int = 2,
-        rs=RandomState(42),
+        rs: RandomState | None | int = None,
     ):
         """
         Perform the non-parametric bootstrap using circular-block bootstrap
@@ -525,7 +522,7 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        rs: RandomState = RandomState(42),
+        rs: RandomState | None | int = None,
     ) -> CalibrationResult:
         """
         Calibrate the parameters of the stochastic process using various estimation methods.
@@ -622,21 +619,26 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        rs: RandomState = RandomState(42),
+        rs: RandomState | None | int = None,
     ):
         """
         Calibrate the stochastic process and store parameters as attribute
         If method is 'mle' function does a simple mle
         If method is 'parametric_bootstrap' function does a parametric bootstrap procedure for bias correction.
-        If method is 'non_parametric_bootstrap' function does a non parametric bootstrap procedure for bias correction
+        If method is 'non_parametric_bootstrap' function does a non-parametric bootstrap procedure for bias correction
 
-        A remark: f_mle MUST return parameters in the same
-        order as `__init__` method with the following signature:
+        .. warning::
 
-        >>> def f_mle(observations: pd.DataFrame,
-        >>> ...   delta: float = 1.,
-        >>> ...   to_array: bool = False
-        >>> ...): -> dict | np.ndarray
+            A remark: f_mle MUST return parameters in the same
+            order as `__init__` method with the following signature:
+
+            .. code-block:: python
+
+                def f_mle(observations: pd.DataFrame,
+                    delta: float = 1.,
+                    to_array: bool = False,
+                    **kwargs
+                ): -> dict | np.ndarray
 
         :param observations: columns indicates the different paths and rows indicates the observations
         :param delta: sampling interval
@@ -652,7 +654,10 @@ class ABCStochasticProcess(abc.ABC):
             f_mle = self._pseudo_maximum_likelihood_estimation
         else:
             f_mle = self._maximize_log_likelihood
-            logger.warning("mle/pseudo_mle not implemented. " "Use numerical estimation from the log_likelihood.")
+            logger.warning(
+                "mle/pseudo_mle not implemented.\
+            Use numerical estimation from the log_likelihood."
+            )
 
         available_methods = ("mle", "pseudo_mle", "numerical_mle", "parametric_bootstrap", "non_parametric_bootstrap")
         if method in ["mle", "pseudo_mle"]:
@@ -689,16 +694,13 @@ class ABCStochasticProcess(abc.ABC):
             observations = observations.to_frame()
 
         if not isinstance(observations, pd.DataFrame):
-            err = "`observations` is a pd.DataFrame-like object"
-            raise TypeError(err)
+            raise TypeError("`observations` is a pd.DataFrame-like object")
 
         if observations.empty:
-            err = "`observations` is a non-empty pd.DataFrame"
-            raise ValueError(err)
+            raise ValueError("`observations` is a non-empty pd.DataFrame")
 
         if observations.isna().any().any():
-            err = "`observations` cannot contain NaN"
-            raise ValueError(err)
+            raise ValueError("`observations` cannot contain NaN")
 
         return observations
 
