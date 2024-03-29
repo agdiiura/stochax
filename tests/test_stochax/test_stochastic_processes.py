@@ -24,6 +24,7 @@ from stochax.brownian_motion import (GeometricBrownianMotion,
 from stochax.calibration_results import CalibrationResult
 
 VERBOSE = os.environ.get("VERBOSE", True)
+N_JOBS = int(os.environ.get("N_JOBS", 4))
 rng = np.random.default_rng()
 
 
@@ -160,7 +161,7 @@ class TestStochasticProcess(unittest.TestCase):
             process.calibrate(self.observations.head(1))
 
         for kw in self.calibrate_kwargs:
-            r = process.calibrate(observations=self.observations, **kw)
+            r = process.calibrate(observations=self.observations, n_jobs=N_JOBS, **kw)
             for key, val in process.parameters.items():
                 self.assertIsInstance(val, float, msg=f'Error in {kw["method"]}')
                 self.assertTrue(pd.notnull(val))
@@ -222,7 +223,7 @@ class TestCoxIngersollRoss(TestStochasticProcess):
     process = CoxIngersollRoss
     init_kwargs = {
         "kappa": rng.normal(loc=1.2, scale=0.01),
-        "alpha": rng.normal(loc=0.9, scale=0.01),
+        "alpha": rng.normal(loc=1.9, scale=0.01),
         "sigma": rng.normal(loc=0.9, scale=0.01),
     }
     calibrate_kwargs = [

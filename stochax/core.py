@@ -348,8 +348,6 @@ class ABCStochasticProcess(abc.ABC):
         observations = self._validate_observations(observations=observations)
 
         ll = self._log_likelihood(observations=observations, delta=delta)
-        if isinstance(ll, np.ndarray):
-            ll = ll.ravel()[0]
 
         if pd.isnull(ll) or np.isinf(ll):
             raise ValueError(f"log-likelihood: {ll} is not finite")
@@ -360,7 +358,7 @@ class ABCStochasticProcess(abc.ABC):
     def _log_likelihood(self, *args, **kwargs) -> float:
         pass
 
-    def _maximize_log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0, to_array: bool = False) -> dict:
+    def _maximize_log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0) -> dict:
         """
         Estimate the process parameter using a numerical procedure.
         For a review on this topic see for instance
@@ -373,7 +371,6 @@ class ABCStochasticProcess(abc.ABC):
         :param observations: columns indicates the different paths
             and rows indicates the observations
         :param delta: sampling interval
-        :param to_array: option to return an array instead of a dict
         """
         bounds = self.bounds.to_tuple()
 
@@ -401,8 +398,6 @@ class ABCStochasticProcess(abc.ABC):
         if best_result is None:
             raise RuntimeError("Numerical optimization not performed.")
 
-        if to_array:
-            return best_result.x
         return {parameter: val for parameter, val in zip(self.parameters.keys(), best_result.x)}
 
     def _compute_mle(self, f: Callable, observations: pd.DataFrame, delta: float = 1.0):
@@ -466,16 +461,13 @@ class ABCStochasticProcess(abc.ABC):
         bs_c = CircularBlockBootstrap(optimal_length, observations, random_state=rs)
 
         result = Parallel(n_jobs=n_jobs)(
-            delayed(lambda x: f(x, delta=delta, to_array=True))(*pos_data)
-            for pos_data, kw_data in bs_c.bootstrap(n_boot_resamples)
+            delayed(lambda x: f(x, delta=delta))(*pos_data) for pos_data, kw_data in bs_c.bootstrap(n_boot_resamples)
         )
-        # squeeze array
-        result = np.array(result)
-        self._bootstrap_results = {key: itm for key, itm in zip(self.parameters.keys(), result.T)}
+        self._bootstrap_results = pd.DataFrame(result)
 
-        for parameter, values in self._bootstrap_results.items():
-            setattr(self, parameter, np.nanmean(values))
-            setattr(self, f"{parameter}_std", np.nanstd(values))
+        for parameter in self._bootstrap_results.columns:
+            setattr(self, parameter, self._bootstrap_results[parameter].mean())
+            setattr(self, f"{parameter}_std", self._bootstrap_results[parameter].std())
 
     def _compute_parametric_bootstrap(
         self, f: Callable, observations: pd.DataFrame, delta: float = 1.0, n_boot_resamples: int = 10, n_jobs: int = 2
@@ -508,17 +500,14 @@ class ABCStochasticProcess(abc.ABC):
             )
 
             result = Parallel(n_jobs=n_jobs)(
-                delayed(lambda x: f(x, delta=delta, to_array=True))(obs_boot.iloc[:, i].to_frame())
-                for i in range(n_boot_resamples)
+                delayed(lambda x: f(x, delta=delta))(obs_boot.iloc[:, i].to_frame()) for i in range(n_boot_resamples)
             )
-            # squeeze array
-            result = np.array(result)
-            self._bootstrap_results = {key: itm for key, itm in zip(self.parameters.keys(), result.T)}
+            self._bootstrap_results = pd.DataFrame(result)
 
-            for parameter, values in self._bootstrap_results.items():
+            for parameter in self._bootstrap_results.columns:
                 val = getattr(self, parameter)
-                setattr(self, parameter, 2.0 * val - np.nanmean(values))
-                setattr(self, f"{parameter}_std", np.nanstd(values))
+                setattr(self, parameter, 2.0 * val - self._bootstrap_results[parameter].mean())
+                setattr(self, f"{parameter}_std", self._bootstrap_results[parameter].std())
 
     def calibrate(
         self,
@@ -593,7 +582,7 @@ class ABCStochasticProcess(abc.ABC):
         if len(observations) < 2:
             raise ValueError("observations length must be >= 1")
 
-        self._bootstrap_results = {k: [None] for k in self.parameters.keys()}
+        self._bootstrap_results = pd.DataFrame({k: [None] for k in self.parameters.keys()})
 
         self._calibrate(
             observations=observations,
@@ -641,7 +630,6 @@ class ABCStochasticProcess(abc.ABC):
 
                 def f_mle(observations: pd.DataFrame,
                     delta: float = 1.,
-                    to_array: bool = False,
                     **kwargs
                 ): -> dict | np.ndarray
 

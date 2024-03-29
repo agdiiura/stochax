@@ -85,6 +85,24 @@ class TestBounds(unittest.TestCase):
 
         self.assertEqual(len(b), len(vals))
 
+    def test_getitem(self):
+        """Test the __getitem__ method"""
+
+        vals = [ParameterBound("a", -1, 1), ParameterBound("b", 0, 1)]
+        b = Bounds(*vals)
+
+        self.assertIsInstance(b["a"], ParameterBound)
+        self.assertIsInstance(b["b"], ParameterBound)
+
+    def test_iter(self):
+        """Test the __iter__ method"""
+
+        vals = [ParameterBound("a", -1, 1), ParameterBound("b", 0, 1)]
+        b = Bounds(*vals)
+
+        for itm in b:
+            self.assertIsInstance(itm, str)
+
     def test_to_tuple(self):
         """Test the to_tuple method"""
 
@@ -104,6 +122,8 @@ def build_suite():
 
     suite.addTest(TestBounds("test_call"))
     suite.addTest(TestBounds("test_len"))
+    suite.addTest(TestBounds("test_getitem"))
+    suite.addTest(TestBounds("test_iter"))
     suite.addTest(TestBounds("test_to_tuple"))
 
     return suite

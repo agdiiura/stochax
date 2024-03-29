@@ -47,7 +47,7 @@ def _read_version():
     try:
         return version("stochax")
 
-    except Exception:
+    except Exception:  # pragma: no cover
         # For development
         file = Path(__file__).absolute().parents[1] / "pyproject.toml"
 

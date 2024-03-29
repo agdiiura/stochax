@@ -3,6 +3,8 @@
 FOLDER=test_stochax
 COMMAND="python suite.py --test"
 
+export N_JOBS="1"
+
 echo ">>>>>>>>>>>>"
 echo ">>> stochax"
 echo ">>>>>>>>>>>>"

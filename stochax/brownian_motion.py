@@ -114,9 +114,7 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
         return norm.logpdf(c, loc=p - self.mu * delta, scale=self.sigma * np.sqrt(delta)).sum()
 
-    def _maximum_likelihood_estimation(
-        self, observations: pd.DataFrame, delta: float, to_array: bool = False
-    ) -> dict | np.ndarray:
+    def _maximum_likelihood_estimation(self, observations: pd.DataFrame, delta: float, to_array: bool = False) -> dict:
         """
         Compute th explicit expression for maximum likelihood estimators of an ABM
         process as proposed in
@@ -137,13 +135,10 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         # Equal to m = np.nanmean(returns) / delta
         m = (observations.to_numpy()[-1, 0] - observations.to_numpy()[0, 0]) / (len(observations) * delta)
         s = np.nanstd(returns) / np.sqrt(delta)
-        if to_array:
-            return np.array([m, s])
-        else:
-            return {
-                "mu": m,
-                "sigma": s,
-            }
+        return {
+            "mu": m,
+            "sigma": s,
+        }
 
 
 class GeometricBrownianMotion(ABCStochasticProcess):
@@ -241,9 +236,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         p, c = log_prices[:-1], log_prices[1:]
         return norm.logpdf(c, loc=p - (self.mu - 0.5 * self.sigma**2) * delta, scale=self.sigma * np.sqrt(delta)).sum()
 
-    def _maximum_likelihood_estimation(
-        self, observations: pd.DataFrame, delta: float, to_array: bool = False
-    ) -> dict | np.ndarray:
+    def _maximum_likelihood_estimation(self, observations: pd.DataFrame, delta: float, to_array: bool = False) -> dict:
         """
         Compute th explicit expression for maximum likelihood estimators of an ABM
         process as proposed in
@@ -264,13 +257,10 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         s = np.nanstd(returns) / np.sqrt(delta)
         m = np.nanmean(returns) / delta + 0.5 * s**2
 
-        if to_array:
-            return np.array([m, s])
-        else:
-            return {
-                "mu": m,
-                "sigma": s,
-            }
+        return {
+            "mu": m,
+            "sigma": s,
+        }
 
 
 if __name__ == "__main__":

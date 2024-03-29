@@ -28,7 +28,12 @@ class MockProcess(object):
         """Return the parameters attribute"""
         return dict(a=self.a, b=self.b)
 
-    def __init__(self, a=1.1, b=2.2):
+    @property
+    def is_calibrated(self) -> bool:
+        """Return the is_calibrated flag"""
+        return all(v is not None for v in self.parameters.values())
+
+    def __init__(self, a=None, b=None):
         """Initialize the class"""
 
         self.a = a
@@ -47,17 +52,18 @@ class TestCalibrationResult(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Configure the test"""
-        process = MockProcess()
-        delta = 1
+
+        process = MockProcess(a=1.0, b=2.0)
+        cls.delta = 1
         cls.method = "fake_bootstrap"
-        bootstrap_results = {k: simulate_univariate_process(100) for k in process.parameters.keys()}
+        cls.bootstrap_results = pd.DataFrame({k: simulate_univariate_process(100) for k in process.parameters.keys()})
 
         cls.fit = CalibrationResult(
             process=process,
             observations=cls.observations,
-            delta=delta,
+            delta=cls.delta,
             method=cls.method,
-            bootstrap_results=bootstrap_results,
+            bootstrap_results=cls.bootstrap_results,
         )
 
     def _assert_show(self, method: str):
@@ -76,6 +82,19 @@ class TestCalibrationResult(unittest.TestCase):
 
         m = self.fit.method
         self.assertEqual(m, self.method)
+
+        self.assertIsInstance(str(self.fit), str)
+
+        wrong_process = MockProcess()
+
+        with self.assertRaises(RuntimeError):
+            CalibrationResult(
+                process=wrong_process,
+                observations=self.observations,
+                delta=self.delta,
+                method=self.method,
+                bootstrap_results=self.bootstrap_results,
+            )
 
     def test_show_parameters(self):
         """Test the show_parameters method"""

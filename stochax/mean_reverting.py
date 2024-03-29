@@ -162,9 +162,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             c, loc=self.alpha + (p - self.alpha) * e, scale=0.5 * self.sigma**2 / self.kappa * (1.0 - e**2)
         ).sum()
 
-    def _maximum_likelihood_estimation(
-        self, observations: pd.DataFrame, delta: float, to_array: bool = False
-    ) -> dict | np.ndarray:
+    def _maximum_likelihood_estimation(self, observations: pd.DataFrame, delta: float, to_array: bool = False) -> dict:
         """
         Compute th explicit expression for maximum likelihood estimators of an Ornstein-Uhlenbeck
         process as proposed in
@@ -216,14 +214,11 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             alpha = np.nan
             sigma = np.nan
 
-        if to_array:
-            return np.array([kappa, alpha, sigma])
-        else:
-            return {
-                "kappa": kappa,
-                "alpha": alpha,
-                "sigma": sigma,
-            }
+        return {
+            "kappa": kappa,
+            "alpha": alpha,
+            "sigma": sigma,
+        }
 
 
 class CoxIngersollRoss(ABCMeanReverting):
@@ -280,12 +275,13 @@ class CoxIngersollRoss(ABCMeanReverting):
         self._validate_parameters()
 
         # test the feller condition
-        if all(par is not None for par in self.parameters.values()):
+        if all(par is not None and np.isfinite(par) for par in self.parameters.values()):
             feller_condition = 2.0 * self.alpha * self.kappa >= self.sigma**2
             if not feller_condition:
                 raise ValueError(
-                    "The Feller condition (2*kappa*alpha>=sigma^2) is not "
-                    "verified and with these params process could reach zero"
+                    f"The Feller condition (2*kappa*alpha>=sigma^2) = "
+                    f"(2*{self.kappa}*{self.alpha}>= {self.sigma}^2) "
+                    f"is not verified and with these params process could reach zero"
                 )
 
     def _stationary_distribution(self, n_simulations: int = 1) -> np.ndarray:
@@ -400,9 +396,7 @@ class CoxIngersollRoss(ABCMeanReverting):
 
         return ncx2.logpdf(c, df=df, nc=4.0 * self.kappa * e * p / (ss * (1.0 - e)), scale=zeta).sum()
 
-    def _pseudo_maximum_likelihood_estimation(
-        self, observations, delta: float = 1.0, to_array: bool = False
-    ) -> dict | np.ndarray:
+    def _pseudo_maximum_likelihood_estimation(self, observations, delta: float = 1.0, to_array: bool = False) -> dict:
         """
         Compute the explicit expression for pseudo-maximum likelihood estimators proposed by Nowman(1997)
 
@@ -449,8 +443,6 @@ class CoxIngersollRoss(ABCMeanReverting):
             alpha = np.nan
             sigma = np.nan
 
-        if to_array:
-            return np.array([kappa, alpha, sigma])
         return {"kappa": kappa, "alpha": alpha, "sigma": sigma}
 
 

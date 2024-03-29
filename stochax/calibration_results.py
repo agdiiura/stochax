@@ -63,7 +63,7 @@ class CalibrationResult(object):
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
         rs: RandomState | int | None = None,
-        bootstrap_results: dict | None = None,
+        bootstrap_results: pd.DataFrame | None = None,
     ):
         """
         Initialize the class
@@ -75,7 +75,7 @@ class CalibrationResult(object):
         :param n_boot_resamples: number bootstrap resamples
         :param n_jobs: number of parallel jobs
         :param rs: bootstrap random state
-        :param bootstrap_results: a dict contained the results of bootstrap procedure
+        :param bootstrap_results: a DataFrame contained the results of bootstrap procedure
 
         Example:
 
@@ -98,7 +98,7 @@ class CalibrationResult(object):
         self._n_boot_resamples = n_boot_resamples
         self._n_jobs = n_jobs
         self._rs = rs
-        self._bootstrap_results = pd.DataFrame(bootstrap_results)
+        self._bootstrap_results = bootstrap_results
 
         self._msg = f"{self.__class__.__name__}({self._process}, observations.shape={self._observations.shape})"
 
