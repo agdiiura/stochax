@@ -35,6 +35,9 @@ class TestStochasticProcess(unittest.TestCase):
     init_kwargs = None
     simulate_kwargs = None
     calibrate_kwargs = None
+    simulation_condition = None
+
+    delta = 1 / 10
 
     # number of simulations
     n_simulations = 10
@@ -43,7 +46,7 @@ class TestStochasticProcess(unittest.TestCase):
     n_steps = 5
     n_steps_large = 5000
     # initial value
-    initial_value = 1
+    initial_value = rng.uniform(low=1, high=2)
     # observations, as a simple GBM with Student-T noise
     observations = pd.DataFrame({"obs": simulate_univariate_process(250)})
 
@@ -112,7 +115,11 @@ class TestStochasticProcess(unittest.TestCase):
         for kw in self.simulate_kwargs:
             process = self.process(**self.init_kwargs)
             simulations = process.simulate(
-                initial_value=self.initial_value, n_simulations=self.n_simulations, n_steps=self.n_steps, **kw
+                delta=self.delta,
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations,
+                n_steps=self.n_steps,
+                **kw,
             )
 
             self.assertIsInstance(simulations, pd.DataFrame)
@@ -122,7 +129,10 @@ class TestStochasticProcess(unittest.TestCase):
             self.assertFalse(simulations.isna().any().any())
 
             simulations = process.simulate(
-                initial_value=self.initial_value, n_simulations=self.n_simulations_large, n_steps=self.n_steps_large
+                delta=self.delta,
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations_large,
+                n_steps=self.n_steps_large,
             )
 
             # if the process has a stationary distribution test against it
@@ -133,6 +143,11 @@ class TestStochasticProcess(unittest.TestCase):
                 self.assertTrue(
                     stationary_mean - stationary_std < last_simulations_mean < stationary_mean + stationary_std
                 )
+
+            # iterate over additional conditions
+            for condition in self.simulation_condition:
+                if condition == "positive":
+                    self.assertTrue((simulations > 0).all().all())
 
     def test_calibrate(self):
         """Test the calibrate method"""
@@ -215,6 +230,7 @@ class TestOrnsteinUhlenbeck(TestStochasticProcess):
         dict(method="numerical_mle"),
     ]
     simulate_kwargs = [dict()]
+    simulation_condition = []
 
 
 class TestCoxIngersollRoss(TestStochasticProcess):
@@ -233,6 +249,7 @@ class TestCoxIngersollRoss(TestStochasticProcess):
         dict(method="numerical_mle"),
     ]
     simulate_kwargs = [dict(method="exact"), dict(method="euler")]
+    simulation_condition = ["positive"]
 
 
 class TestArithmeticBrownianMotion(TestStochasticProcess):
@@ -247,6 +264,7 @@ class TestArithmeticBrownianMotion(TestStochasticProcess):
         dict(method="numerical_mle"),
     ]
     simulate_kwargs = [dict()]
+    simulation_condition = []
 
 
 class TestGeometricBrownianMotion(TestStochasticProcess):
@@ -261,6 +279,7 @@ class TestGeometricBrownianMotion(TestStochasticProcess):
         dict(method="numerical_mle"),
     ]
     simulate_kwargs = [dict()]
+    simulation_condition = ["positive"]
 
 
 def build_suite(model: str = "all"):

@@ -91,7 +91,7 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         # setting initial condition
         increments[0] = [initial_value] * n_simulations
 
-        return pd.DataFrame(increments.cumsum(axis=0))  # TODO decide index and columns
+        return pd.DataFrame(increments.cumsum(axis=0))
 
     def _log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0) -> float:
         """
@@ -214,7 +214,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         increments = np.exp(increments)
         # setting initial condition
         increments[0] = [initial_value] * n_simulations
-        return pd.DataFrame(increments.cumprod(axis=0))  # TODO decide index and columns
+        return pd.DataFrame(increments.cumprod(axis=0))
 
     def _log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0) -> float:
         """

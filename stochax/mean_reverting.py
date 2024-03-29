@@ -130,7 +130,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             # in each iteration simulate one step of EACH path
             simulations[i + 1, :] = simulations[i, :] * e + self.alpha * (1.0 - e) + b
 
-        return pd.DataFrame(simulations)  # TODO decide index and columns
+        return pd.DataFrame(simulations)
 
     def _log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0) -> float:
         """
