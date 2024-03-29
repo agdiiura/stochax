@@ -297,7 +297,7 @@ class CoxIngersollRoss(ABCMeanReverting):
         """
 
         return gamma.rvs(
-            2 * self.kappa * self.alpha / self.sigma**2, 0, self.sigma**2 / (2 * self.kappa), size=n_simulations
+            2.0 * self.kappa * self.alpha / self.sigma**2, 0, self.sigma**2 / (2 * self.kappa), size=n_simulations
         )  # shape(must be >0), location, scale(must be >0)
 
     def _simulate(
@@ -330,9 +330,9 @@ class CoxIngersollRoss(ABCMeanReverting):
             kappa = np.ones(n_simulations) * self.kappa
             alpha = np.ones(n_simulations) * self.alpha
             sigma = np.ones(n_simulations) * self.sigma
-            dof = np.array(4 * kappa * alpha / sigma**2)
+            dof = np.array(4.0 * kappa * alpha / sigma**2)
 
-            scale_factor = np.array((sigma**2 * (1 - np.exp(-kappa * delta))) / (4 * kappa))
+            scale_factor = np.array((sigma**2 * (1.0 - np.exp(-kappa * delta))) / (4.0 * kappa))
             chi = np.random.chisquare(dof - 1, size=(n_steps + 1, n_simulations))
 
             dof = dof * np.ones(n_simulations)

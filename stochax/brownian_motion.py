@@ -197,7 +197,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         self, initial_value: float, n_steps: int, delta: float = 1.0, n_simulations: int = 1, method: str = "exact"
     ) -> pd.DataFrame:
         """
-        Simulate Brownian Motion paths
+        Simulate Geometric Brownian Motion paths
 
         The time interval of simulation is [0,T] where T = n_steps*delta
 
@@ -223,7 +223,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
     def _log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0) -> float:
         """
-        Compute the log-likelihood function for ABM process using the parameters
+        Compute the log-likelihood function for GBM process using the parameters
         stored as attributes
 
         See:

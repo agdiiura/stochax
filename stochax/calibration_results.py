@@ -88,6 +88,10 @@ class CalibrationResult(object):
         """
 
         self._process = process
+
+        if not self._process.is_calibrated:
+            raise RuntimeError(f"The process is not calibrated: {self._process}")
+
         self._observations = observations
         self._delta = delta
         self._method = method

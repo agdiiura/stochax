@@ -258,6 +258,11 @@ class ABCStochasticProcess(abc.ABC):
         """Return the model bounds"""
         return self._bounds
 
+    @property
+    def is_calibrated(self) -> bool:
+        """Return a flag to indicate whereas parameters are not null"""
+        return all(v is not None for v in self.parameters.values())
+
     def _validate_parameters(self):
         """Validate the process parameters"""
         self._bounds(parameters=self.parameters)
@@ -340,7 +345,7 @@ class ABCStochasticProcess(abc.ABC):
         :return: The value of the log-likelihood function computed for the given observations
         """
         self._assert_finite_parameters()
-        observations = self._check_observations(observations=observations)
+        observations = self._validate_observations(observations=observations)
 
         ll = self._log_likelihood(observations=observations, delta=delta)
         if isinstance(ll, np.ndarray):
@@ -579,7 +584,7 @@ class ABCStochasticProcess(abc.ABC):
 
 
         """
-        observations = self._check_observations(observations=observations)
+        observations = self._validate_observations(observations=observations)
 
         if delta <= 0:
             raise ValueError("delta must be >0 ")
@@ -681,12 +686,12 @@ class ABCStochasticProcess(abc.ABC):
             raise TypeError(f"not valid choice for `method`. " f"Available methods are {available_methods}.")
 
     @staticmethod
-    def _check_observations(observations: pd.DataFrame) -> pd.DataFrame:
+    def _validate_observations(observations: pd.DataFrame) -> pd.DataFrame:
         """
-        Check the observations input
+        Validate the observations input
 
         :param observations: input data
-        :return: observations: output data
+        :return: output data
         """
         if isinstance(observations, (np.ndarray, list)):
             observations = pd.DataFrame(observations)
