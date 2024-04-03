@@ -320,7 +320,6 @@ class CoxIngersollRoss(ABCMeanReverting):
         observations = initial_value * np.ones((n_steps + 1, n_simulations))
 
         ran = norm.rvs(size=(n_steps + 1, n_simulations))
-
         if method == "exact":
             # exact discretization
             kappa = np.ones(n_simulations) * self.kappa
