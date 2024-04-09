@@ -77,7 +77,12 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         ParameterBound("sigma", float, 0.0, np.inf),
     )
 
-    def __init__(self, kappa: float | None = None, alpha: float | None = None, sigma: float | None = None):
+    def __init__(
+        self,
+        kappa: float | None = None,
+        alpha: float | None = None,
+        sigma: float | None = None,
+    ):
         """
         Initialize the class
 
@@ -99,10 +104,19 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         :params n_simulations: number of values to be simulated
         :return: the stationarity distribution
         """
-        return norm.rvs(loc=self.alpha, scale=self.sigma * np.sqrt(1.0 / (2.0 * self.kappa)), size=n_simulations)
+        return norm.rvs(
+            loc=self.alpha,
+            scale=self.sigma * np.sqrt(1.0 / (2.0 * self.kappa)),
+            size=n_simulations,
+        )
 
     def _simulate(
-        self, initial_value: float, n_steps: int, delta: float = 1.0, n_simulations: int = 1, method: str = "exact"
+        self,
+        initial_value: float,
+        n_steps: int,
+        delta: float = 1.0,
+        n_simulations: int = 1,
+        method: str = "exact",
     ) -> pd.DataFrame:
         """
         Simulate Ornstein Uhlenbeck paths
@@ -124,7 +138,11 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
 
         e = np.exp(-self.kappa * delta)
         # use standard normal
-        brownian = self.sigma * np.sqrt((1.0 - e**2) / (2 * self.kappa)) * norm.rvs(size=(n_steps + 1, n_simulations))
+        brownian = (
+            self.sigma
+            * np.sqrt((1.0 - e**2) / (2 * self.kappa))
+            * norm.rvs(size=(n_steps + 1, n_simulations))
+        )
 
         for i, b in enumerate(brownian[1:]):
             # in each iteration simulate one step of EACH path
@@ -159,10 +177,14 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         e = np.exp(-self.kappa * delta)
 
         return norm.logpdf(
-            c, loc=self.alpha + (p - self.alpha) * e, scale=0.5 * self.sigma**2 / self.kappa * (1.0 - e**2)
+            c,
+            loc=self.alpha + (p - self.alpha) * e,
+            scale=0.5 * self.sigma**2 / self.kappa * (1.0 - e**2),
         ).sum()
 
-    def _maximum_likelihood_estimation(self, observations: pd.DataFrame, delta: float, to_array: bool = False) -> dict:
+    def _maximum_likelihood_estimation(
+        self, observations: pd.DataFrame, delta: float, to_array: bool = False
+    ) -> dict:
         """
         Compute th explicit expression for maximum likelihood estimators of an Ornstein-Uhlenbeck
         process as proposed in
@@ -190,7 +212,9 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
 
         n_inv = 1.0 / n
         # below the explicit expression for the parameters (alpha,kappa,sigma)
-        b1 = (n_inv * obs_xy - (n_inv**2) * obs_y * obs_x) / (n_inv * obs_xx - (n_inv * obs_x) ** 2)
+        b1 = (n_inv * obs_xy - (n_inv**2) * obs_y * obs_x) / (
+            n_inv * obs_xx - (n_inv * obs_x) ** 2
+        )
         b1_minus = 1.0 - b1
         b2 = n_inv * (obs_y - obs_x * b1) / b1_minus
         b3 = n_inv * (
@@ -259,7 +283,12 @@ class CoxIngersollRoss(ABCMeanReverting):
         ParameterBound("sigma", float, 0.0, np.inf),
     )
 
-    def __init__(self, kappa: float | None = None, alpha: float | None = None, sigma: float | None = None):
+    def __init__(
+        self,
+        kappa: float | None = None,
+        alpha: float | None = None,
+        sigma: float | None = None,
+    ):
         """
         Initialize the class
 
@@ -293,11 +322,19 @@ class CoxIngersollRoss(ABCMeanReverting):
         """
 
         return gamma.rvs(
-            2.0 * self.kappa * self.alpha / self.sigma**2, 0, self.sigma**2 / (2 * self.kappa), size=n_simulations
+            2.0 * self.kappa * self.alpha / self.sigma**2,
+            0,
+            self.sigma**2 / (2 * self.kappa),
+            size=n_simulations,
         )  # shape(must be >0), location, scale(must be >0)
 
     def _simulate(
-        self, initial_value: float, n_steps: int, delta: float = 1.0, n_simulations: int = 1, method: str = "exact"
+        self,
+        initial_value: float,
+        n_steps: int,
+        delta: float = 1.0,
+        n_simulations: int = 1,
+        method: str = "exact",
     ) -> pd.DataFrame:
         """
         Simulate CIR paths given params
@@ -317,45 +354,48 @@ class CoxIngersollRoss(ABCMeanReverting):
         if method not in ["exact", "euler"]:
             raise TypeError("not valid choice for `method`")
         # each column is a simulated path
-        observations = initial_value * np.ones((n_steps + 1, n_simulations))
+        shape = (n_steps + 1, n_simulations)
+        observations = initial_value * np.ones(shape)
 
-        ran = norm.rvs(size=(n_steps + 1, n_simulations))
+        ran = norm.rvs(size=shape)
+
         if method == "exact":
             # exact discretization
-            kappa = np.ones(n_simulations) * self.kappa
-            alpha = np.ones(n_simulations) * self.alpha
-            sigma = np.ones(n_simulations) * self.sigma
-            dof = np.array(4.0 * kappa * alpha / sigma**2)
+            dof = 4.0 * self.kappa * self.alpha / self.sigma**2
 
-            scale_factor = np.array((sigma**2 * (1.0 - np.exp(-kappa * delta))) / (4.0 * kappa))
-            chi = np.random.chisquare(dof - 1, size=(n_steps + 1, n_simulations))
+            scale_factor = (self.sigma**2 * (1.0 - np.exp(-self.kappa * delta))) / (
+                4.0 * self.kappa
+            )
 
-            dof = dof * np.ones(n_simulations)
-
-            g = dof > 1  # condition different algorithm numerically advantageous
-            b = dof <= 1  # bad algorithm
-
-            if np.any(g):  # different algorithm numerically advantageous
+            if dof > 1:  # different algorithm numerically advantageous
+                chi = np.random.chisquare(dof - 1, size=shape)
                 for i in range(n_steps):
-                    item = observations[i, g] * np.exp(-kappa[g] * delta) / scale_factor[g]
-                    observations[i + 1, g] = scale_factor[g] * ((ran[i + 1, g] + np.sqrt(item)) ** 2 + chi[i + 1, g])
+                    item = observations[i, :] * np.exp(-self.kappa * delta) / scale_factor
+                    observations[i + 1, :] = scale_factor * (
+                        (ran[i + 1, :] + np.sqrt(item)) ** 2 + chi[i + 1, :]
+                    )
             else:
                 for i in range(n_steps):
-                    item = observations[i, b] * np.exp(-kappa[b] * delta) / scale_factor[b]
-                    N = np.random.poisson(item / 2, n_simulations)
-                    chi = np.random.chisquare(dof[b] + 2 * N, n_simulations)
-                    observations[i + 1, b] = scale_factor[b] * chi
+                    item = observations[i, :] * np.exp(-self.kappa * delta) / scale_factor
+                    p = np.random.poisson(item / 2, n_simulations)
+                    chi = np.random.chisquare(dof + 2 * p, n_simulations)
+                    observations[i + 1, :] = scale_factor * chi
 
         elif method == "euler":  # Euler scheme (full truncation)
             observations_h = initial_value * np.ones(
-                (n_steps + 1, n_simulations)
+                shape
             )  # needed for the euler approximation
 
             for i in range(n_steps):
                 observations_h[i + 1, :] = (
                     observations_h[i, :]
-                    + self.kappa * (self.alpha - np.maximum(0, observations_h[i, :])) * delta
-                    + np.sqrt(np.maximum(0, observations_h[i, :])) * self.sigma * ran[i + 1, :] * np.sqrt(delta)
+                    + self.kappa
+                    * (self.alpha - np.maximum(0, observations_h[i, :]))
+                    * delta
+                    + np.sqrt(np.maximum(0, observations_h[i, :]))
+                    * self.sigma
+                    * ran[i + 1, :]
+                    * np.sqrt(delta)
                 )
                 observations[i + 1] = np.maximum(0, observations_h[i + 1, :])
 
@@ -383,7 +423,9 @@ class CoxIngersollRoss(ABCMeanReverting):
         """
 
         if (observations.to_numpy() < 0).any():
-            raise ValueError("The paths touches zero and it is impossible to calculate likelihood function")
+            raise ValueError(
+                "The paths touches zero and it is impossible to calculate likelihood function"
+            )
 
         prices = observations.to_numpy().ravel()
 
@@ -393,9 +435,13 @@ class CoxIngersollRoss(ABCMeanReverting):
         df = 4.0 * self.kappa * self.alpha / ss
         zeta = ss * (1.0 - e) / (4.0 * self.kappa)
 
-        return ncx2.logpdf(c, df=df, nc=4.0 * self.kappa * e * p / (ss * (1.0 - e)), scale=zeta).sum()
+        return ncx2.logpdf(
+            c, df=df, nc=4.0 * self.kappa * e * p / (ss * (1.0 - e)), scale=zeta
+        ).sum()
 
-    def _pseudo_maximum_likelihood_estimation(self, observations, delta: float = 1.0, to_array: bool = False) -> dict:
+    def _pseudo_maximum_likelihood_estimation(
+        self, observations, delta: float = 1.0, to_array: bool = False
+    ) -> dict:
         """
         Compute the explicit expression for pseudo-maximum likelihood estimators proposed by Nowman(1997)
 
@@ -413,12 +459,18 @@ class CoxIngersollRoss(ABCMeanReverting):
         obs_x = observations[0:n, :].sum(axis=0)[0]
         obs_x_1 = (observations[0:n, :] ** (-1)).sum(axis=0)[0]
         obs_y = observations[1 : n + 1, :].sum(axis=0)[0]
-        obs_yyx_1 = ((observations[1 : n + 1, :] ** 2) * (observations[0:n] ** (-1))).sum(axis=0)[0]
-        obs_x_1y = (observations[1 : n + 1, :] * (observations[0:n, :] ** (-1))).sum(axis=0)[0]
+        obs_yyx_1 = ((observations[1 : n + 1, :] ** 2) * (observations[0:n] ** (-1))).sum(
+            axis=0
+        )[0]
+        obs_x_1y = (observations[1 : n + 1, :] * (observations[0:n, :] ** (-1))).sum(
+            axis=0
+        )[0]
 
         # below the explicit expression for the parameters (kappa,alpha,sigma)
         n_inv = 1.0 / n
-        b1 = (n_inv**2 * obs_y * obs_x_1 - n_inv * obs_x_1y) / (n_inv**2 * obs_x * obs_x_1 - 1.0)
+        b1 = (n_inv**2 * obs_y * obs_x_1 - n_inv * obs_x_1y) / (
+            n_inv**2 * obs_x * obs_x_1 - 1.0
+        )
         b1_minus = 1.0 - b1
         b2 = ((n_inv * obs_x_1y) - b1) / (b1_minus * n_inv * obs_x_1)
         b3 = n_inv * (

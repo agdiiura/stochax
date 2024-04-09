@@ -28,8 +28,9 @@ class TestParameterBound(unittest.TestCase):
             ParameterBound("err", float, 100, -100)
 
         b = ParameterBound("a", float, -1, 1)
+
         with self.assertRaises(TypeError):
-            b(100)
+            b("100")
 
         with self.assertRaises(ValueError):
             b(100.0)

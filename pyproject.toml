@@ -47,7 +47,7 @@ docs = [
 
 [tool.ruff]
 src = ['stochax']
-line-length = 119
+line-length = 90
 
 [tool.ruff.lint]
 select = ['E', 'W', 'D']
@@ -81,6 +81,9 @@ exclude = [
 "setup.py" = ["F401", "D100"]
 #"tests/*.py" = ["I900"]
 #"examples/*.py" = ["I900"]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 119
 
 [tool.isort]
 combine_as_imports = true

@@ -48,7 +48,10 @@ __all__ = ["ParameterBound", "Bounds"]
 
 
 def objective(
-    params, process: Any | None = None, observations: pd.DataFrame | None = None, delta: float = 1.0
+    params,
+    process: Any | None = None,
+    observations: pd.DataFrame | None = None,
+    delta: float = 1.0,
 ) -> float:
     """
     Calculate the objective function using a wrapper for a given
@@ -87,7 +90,13 @@ class ParameterBound(object):
     It provides methods for validating values against these bounds.
     """
 
-    def __init__(self, parameter: str, att_type: Any = float, lower: float = -np.inf, upper: float = np.inf):
+    def __init__(
+        self,
+        parameter: str,
+        att_type: Any = float,
+        lower: float = -np.inf,
+        upper: float = np.inf,
+    ):
         """
         Initialize the class
 
@@ -106,7 +115,9 @@ class ParameterBound(object):
         self.upper = upper
 
         self._msg = (
-            f"{self.__class__.__name__}" f"({self.parameter} [{self.att_type}], " f"[{self.lower}, {self.upper}])"
+            f"{self.__class__.__name__}"
+            f"({self.parameter} [{self.att_type}], "
+            f"[{self.lower}, {self.upper}])"
         )
 
     def __call__(self, value: Number | None = None):
@@ -120,10 +131,16 @@ class ParameterBound(object):
             if not isinstance(value, self.att_type):
                 raise TypeError(f"`{self.parameter}` is type {self.att_type}")
             if value > self.upper:
-                raise ValueError(f"`{self.parameter}` greater than upper bound: " f"{value} > {self.upper}")
+                raise ValueError(
+                    f"`{self.parameter}` greater than upper bound: "
+                    f"{value} > {self.upper}"
+                )
 
             if value < self.lower:
-                raise ValueError(f"`{self.parameter}` lower than upper bound: " f"{value} < {self.lower}")
+                raise ValueError(
+                    f"`{self.parameter}` lower than upper bound: "
+                    f"{value} < {self.lower}"
+                )
 
     def __str__(self) -> str:
         """Override the print output to return a string representation of the class"""
@@ -296,14 +313,20 @@ class ABCStochasticProcess(abc.ABC):
         return self._msg()
 
     def simulate(
-        self, initial_value: float, n_steps: int, delta: float = 1.0, n_simulations: int = 1, method: str = "exact"
+        self,
+        initial_value: float | tuple,
+        n_steps: int,
+        delta: float = 1.0,
+        n_simulations: int = 1,
+        method: str = "exact",
     ) -> pd.DataFrame:
         """
         Simulate paths of the stochastic process.
 
         This method generates simulated paths of a generic stochastic process based on the provided parameters.
 
-        :param initial_value: The initial value or starting point for the simulation
+        :param initial_value: The initial value or starting point for the simulation, if required also the
+            initial volatility
         :param n_steps: The number of steps or observations to simulate, excluding the initial value
         :param delta: The sampling interval between consecutive observations
         :param n_simulations: The number of paths to simulate
@@ -324,7 +347,11 @@ class ABCStochasticProcess(abc.ABC):
             raise ValueError("n_simulations must be >= 1")
 
         return self._simulate(
-            initial_value=initial_value, n_steps=n_steps, delta=delta, n_simulations=n_simulations, method=method
+            initial_value=initial_value,
+            n_steps=n_steps,
+            delta=delta,
+            n_simulations=n_simulations,
+            method=method,
         )
 
     @abc.abstractmethod
@@ -360,7 +387,9 @@ class ABCStochasticProcess(abc.ABC):
     def _log_likelihood(self, *args, **kwargs) -> float:
         pass
 
-    def _maximize_log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0) -> dict:
+    def _maximize_log_likelihood(
+        self, observations: pd.DataFrame, delta: float = 1.0
+    ) -> dict:
         """
         Estimate the process parameter using a numerical procedure.
         For a review on this topic see for instance
@@ -400,7 +429,10 @@ class ABCStochasticProcess(abc.ABC):
         if best_result is None:
             raise RuntimeError("Numerical optimization not performed.")
 
-        return {parameter: val for parameter, val in zip(self.parameters.keys(), best_result.x)}
+        return {
+            parameter: val
+            for parameter, val in zip(self.parameters.keys(), best_result.x)
+        }
 
     def _compute_mle(self, f: Callable, observations: pd.DataFrame, delta: float = 1.0):
         """
@@ -458,12 +490,15 @@ class ABCStochasticProcess(abc.ABC):
         :param rs: random state for non-parametric sample
         """
 
-        optimal_length = max(int(optimal_block_length(observations).circular), self._min_optimal_length)
+        optimal_length = max(
+            int(optimal_block_length(observations).circular), self._min_optimal_length
+        )
 
         bs_c = CircularBlockBootstrap(optimal_length, observations, random_state=rs)
 
         result = Parallel(n_jobs=n_jobs)(
-            delayed(lambda x: f(x, delta=delta))(*pos_data) for pos_data, kw_data in bs_c.bootstrap(n_boot_resamples)
+            delayed(lambda x: f(x, delta=delta))(*pos_data)
+            for pos_data, kw_data in bs_c.bootstrap(n_boot_resamples)
         )
         self._bootstrap_results = pd.DataFrame(result)
 
@@ -472,7 +507,12 @@ class ABCStochasticProcess(abc.ABC):
             setattr(self, f"{parameter}_std", self._bootstrap_results[parameter].std())
 
     def _compute_parametric_bootstrap(
-        self, f: Callable, observations: pd.DataFrame, delta: float = 1.0, n_boot_resamples: int = 10, n_jobs: int = 2
+        self,
+        f: Callable,
+        observations: pd.DataFrame,
+        delta: float = 1.0,
+        n_boot_resamples: int = 10,
+        n_jobs: int = 2,
     ):
         """
         Perform a parametric bootstrap calibration according to the procedure
@@ -498,18 +538,26 @@ class ABCStochasticProcess(abc.ABC):
                 setattr(self, parameter, estimated_params[parameter])
 
             obs_boot = self.simulate(
-                observations.iloc[0, 0], n_steps=len(observations) - 1, delta=delta, n_simulations=n_boot_resamples
+                observations.iloc[0, 0],
+                n_steps=len(observations) - 1,
+                delta=delta,
+                n_simulations=n_boot_resamples,
             )
 
             result = Parallel(n_jobs=n_jobs)(
-                delayed(lambda x: f(x, delta=delta))(obs_boot.iloc[:, i].to_frame()) for i in range(n_boot_resamples)
+                delayed(lambda x: f(x, delta=delta))(obs_boot.iloc[:, i].to_frame())
+                for i in range(n_boot_resamples)
             )
             self._bootstrap_results = pd.DataFrame(result)
 
             for parameter in self._bootstrap_results.columns:
                 val = getattr(self, parameter)
-                setattr(self, parameter, 2.0 * val - self._bootstrap_results[parameter].mean())
-                setattr(self, f"{parameter}_std", self._bootstrap_results[parameter].std())
+                setattr(
+                    self, parameter, 2.0 * val - self._bootstrap_results[parameter].mean()
+                )
+                setattr(
+                    self, f"{parameter}_std", self._bootstrap_results[parameter].std()
+                )
 
     def calibrate(
         self,
@@ -584,7 +632,9 @@ class ABCStochasticProcess(abc.ABC):
         if len(observations) < 2:
             raise ValueError("observations length must be >= 1")
 
-        self._bootstrap_results = pd.DataFrame({k: [None] for k in self.parameters.keys()})
+        self._bootstrap_results = pd.DataFrame(
+            {k: [None] for k in self.parameters.keys()}
+        )
 
         self._calibrate(
             observations=observations,
@@ -654,14 +704,26 @@ class ABCStochasticProcess(abc.ABC):
             Use numerical estimation from the log_likelihood."
             )
 
-        available_methods = ("mle", "pseudo_mle", "numerical_mle", "parametric_bootstrap", "non_parametric_bootstrap")
+        available_methods = (
+            "mle",
+            "pseudo_mle",
+            "numerical_mle",
+            "parametric_bootstrap",
+            "non_parametric_bootstrap",
+        )
         if method in ["mle", "pseudo_mle"]:
             self._compute_mle(f=f_mle, observations=observations, delta=delta)
         elif method == "numerical_mle":
-            self._compute_mle(f=self._maximize_log_likelihood, observations=observations, delta=delta)
+            self._compute_mle(
+                f=self._maximize_log_likelihood, observations=observations, delta=delta
+            )
         elif method == "parametric_bootstrap":
             self._compute_parametric_bootstrap(
-                f=f_mle, observations=observations, delta=delta, n_boot_resamples=n_boot_resamples, n_jobs=n_jobs
+                f=f_mle,
+                observations=observations,
+                delta=delta,
+                n_boot_resamples=n_boot_resamples,
+                n_jobs=n_jobs,
             )
         elif method == "non_parametric_bootstrap":
             self._compute_nonparametric_bootstrap(
@@ -673,7 +735,10 @@ class ABCStochasticProcess(abc.ABC):
                 rs=rs,
             )
         else:
-            raise TypeError(f"not valid choice for `method`. " f"Available methods are {available_methods}.")
+            raise TypeError(
+                f"not valid choice for `method`. "
+                f"Available methods are {available_methods}."
+            )
 
     @staticmethod
     def _validate_observations(observations: pd.DataFrame) -> pd.DataFrame:
