@@ -25,7 +25,12 @@ from stochax.calibration_results import CalibrationResult
 
 VERBOSE = os.environ.get("VERBOSE", True)
 N_JOBS = int(os.environ.get("N_JOBS", 4))
-rng = np.random.default_rng()
+SEED = os.environ.get("SEED", None)
+try:
+    SEED = int(SEED)
+except TypeError:
+    pass
+rng = np.random.default_rng(SEED)
 
 
 class TestStochasticProcess(unittest.TestCase):
@@ -36,6 +41,8 @@ class TestStochasticProcess(unittest.TestCase):
     simulate_kwargs = None
     calibrate_kwargs = None
     simulation_condition = None
+
+    rng = rng
 
     delta = 1 / 10
 
@@ -48,7 +55,7 @@ class TestStochasticProcess(unittest.TestCase):
     # initial value
     initial_value = rng.uniform(low=1, high=2)
     # observations, as a simple GBM with Student-T noise
-    observations = pd.DataFrame({"obs": simulate_univariate_process(250)})
+    observations = pd.DataFrame({"obs": simulate_univariate_process(250, rng=rng)})
 
     def test_init(self):
         """Test the initializer"""
@@ -70,7 +77,7 @@ class TestStochasticProcess(unittest.TestCase):
             with self.assertRaises(TypeError):
                 process.stationary_distribution()
 
-            process = self.process(**self.init_kwargs)
+            process = self.process(**self.init_kwargs, rng=self.rng)
             dist = process.stationary_distribution(n_simulations=self.n_simulations)
             self.assertIsInstance(dist, np.ndarray)
             self.assertTrue(len(dist), self.n_simulations)
@@ -80,40 +87,66 @@ class TestStochasticProcess(unittest.TestCase):
 
         process = self.process()
         with self.assertRaises(TypeError):
-            process.simulate(initial_value=self.initial_value, n_simulations=self.n_simulations, n_steps=self.n_steps)
+            process.simulate(
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations,
+                n_steps=self.n_steps,
+            )
 
-        process = self.process(**self.init_kwargs)
+        process = self.process(**self.init_kwargs, rng=self.rng)
 
         with self.assertRaises(ValueError):
             process.simulate(
-                initial_value=self.initial_value, n_simulations=self.n_simulations, n_steps=self.n_steps, delta=-1
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations,
+                n_steps=self.n_steps,
+                delta=-1,
             )
 
         with self.assertRaises(ValueError):
-            process.simulate(initial_value=self.initial_value, n_simulations=self.n_simulations, n_steps=-1)
+            process.simulate(
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations,
+                n_steps=-1,
+            )
 
         with self.assertRaises(ValueError):
-            process.simulate(initial_value=self.initial_value, n_simulations=-1, n_steps=self.n_steps)
+            process.simulate(
+                initial_value=self.initial_value, n_simulations=-1, n_steps=self.n_steps
+            )
 
         kw = self.init_kwargs.copy()
+
         key = list(kw.keys())[-1]
         with self.assertRaises(TypeError):
             kw[key] = None
             process = self.process(**kw)
-            process.simulate(initial_value=self.initial_value, n_simulations=self.n_simulations, n_steps=self.n_steps)
+            process.simulate(
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations,
+                n_steps=self.n_steps,
+            )
 
         with self.assertRaises(TypeError):
             kw[key] = np.nan
             process = self.process(**kw)
-            process.simulate(initial_value=self.initial_value, n_simulations=self.n_simulations, n_steps=self.n_steps)
+            process.simulate(
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations,
+                n_steps=self.n_steps,
+            )
 
         with self.assertRaises(TypeError):
             kw[key] = np.inf
             process = self.process(**kw)
-            process.simulate(initial_value=self.initial_value, n_simulations=self.n_simulations, n_steps=self.n_steps)
+            process.simulate(
+                initial_value=self.initial_value,
+                n_simulations=self.n_simulations,
+                n_steps=self.n_steps,
+            )
 
         for kw in self.simulate_kwargs:
-            process = self.process(**self.init_kwargs)
+            process = self.process(**self.init_kwargs, rng=self.rng)
             simulations = process.simulate(
                 delta=self.delta,
                 initial_value=self.initial_value,
@@ -125,7 +158,9 @@ class TestStochasticProcess(unittest.TestCase):
             self.assertIsInstance(simulations, pd.DataFrame)
             self.assertFalse(simulations.empty)
             self.assertEqual(simulations.shape, (self.n_steps + 1, self.n_simulations))
-            self.assertEqual(simulations.iloc[0].tolist(), self.n_simulations * [self.initial_value])
+            self.assertEqual(
+                simulations.iloc[0].tolist(), self.n_simulations * [self.initial_value]
+            )
             self.assertFalse(simulations.isna().any().any())
 
             simulations = process.simulate(
@@ -137,11 +172,15 @@ class TestStochasticProcess(unittest.TestCase):
 
             # if the process has a stationary distribution test against it
             if hasattr(process, "stationary_distribution"):
-                stationary = process.stationary_distribution(n_simulations=self.n_simulations_large)
+                stationary = process.stationary_distribution(
+                    n_simulations=self.n_simulations_large
+                )
                 stationary_mean, stationary_std = np.mean(stationary), np.std(stationary)
                 last_simulations_mean = simulations.iloc[-1].mean()
                 self.assertTrue(
-                    stationary_mean - stationary_std < last_simulations_mean < stationary_mean + stationary_std
+                    stationary_mean - stationary_std
+                    < last_simulations_mean
+                    < stationary_mean + stationary_std
                 )
 
             # iterate over additional conditions
@@ -152,7 +191,7 @@ class TestStochasticProcess(unittest.TestCase):
     def test_calibrate(self):
         """Test the calibrate method"""
 
-        process = self.process()
+        process = self.process(rng=self.rng)
 
         with self.assertRaises(TypeError):
             process.calibrate("string")
@@ -256,7 +295,10 @@ class TestArithmeticBrownianMotion(TestStochasticProcess):
     """The class for ArithmeticBrownianMotion test"""
 
     process = ArithmeticBrownianMotion
-    init_kwargs = {"mu": rng.normal(loc=0, scale=0.01), "sigma": rng.normal(loc=0.9, scale=0.01)}
+    init_kwargs = {
+        "mu": rng.normal(loc=0, scale=0.01),
+        "sigma": rng.normal(loc=0.9, scale=0.01),
+    }
     calibrate_kwargs = [
         dict(method="mle"),
         dict(method="parametric_bootstrap"),
@@ -271,7 +313,10 @@ class TestGeometricBrownianMotion(TestStochasticProcess):
     """The class for GeometricBrownianMotion test"""
 
     process = GeometricBrownianMotion
-    init_kwargs = {"mu": rng.normal(loc=0, scale=0.01), "sigma": rng.normal(loc=0.9, scale=0.01)}
+    init_kwargs = {
+        "mu": rng.normal(loc=0, scale=0.01),
+        "sigma": rng.normal(loc=0.9, scale=0.01),
+    }
     calibrate_kwargs = [
         dict(method="mle"),
         dict(method="parametric_bootstrap"),
@@ -296,10 +341,10 @@ def build_suite(model: str = "all"):
     ]
 
     models = {
-        "ou": TestOrnsteinUhlenbeck,
-        "cir": TestCoxIngersollRoss,
         "abm": TestArithmeticBrownianMotion,
         "gbm": TestGeometricBrownianMotion,
+        "ou": TestOrnsteinUhlenbeck,
+        "cir": TestCoxIngersollRoss,
     }
     classes = models.values() if model == "all" else [models[model]]
 
