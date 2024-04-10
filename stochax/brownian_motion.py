@@ -53,7 +53,10 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
     """
 
-    _bounds = Bounds(ParameterBound("mu", float, -np.inf, np.inf), ParameterBound("sigma", float, 0.0, np.inf))
+    _bounds = Bounds(
+        ParameterBound("mu", float, -np.inf, np.inf),
+        ParameterBound("sigma", float, 0.0, np.inf),
+    )
 
     def __init__(self, mu: float | None = None, sigma: float | None = None):
         """
@@ -69,7 +72,12 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         self._validate_parameters()
 
     def _simulate(
-        self, initial_value: float, n_steps: int, delta: float = 1.0, n_simulations: int = 1, method: str = "exact"
+        self,
+        initial_value: float,
+        n_steps: int,
+        delta: float = 1.0,
+        n_simulations: int = 1,
+        method: str = "exact",
     ) -> pd.DataFrame:
         """
         Simulate Brownian Motion paths
@@ -87,7 +95,9 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         """
 
         # use standard normal
-        increments = self.mu * delta + self.sigma * np.sqrt(delta) * norm.rvs(size=(n_steps + 1, n_simulations))
+        increments = self.mu * delta + self.sigma * np.sqrt(delta) * norm.rvs(
+            size=(n_steps + 1, n_simulations)
+        )
         # setting initial condition
         increments[0] = [initial_value] * n_simulations
 
@@ -112,9 +122,13 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
         p, c = prices[:-1], prices[1:]
 
-        return norm.logpdf(c, loc=p - self.mu * delta, scale=self.sigma * np.sqrt(delta)).sum()
+        return norm.logpdf(
+            c, loc=p - self.mu * delta, scale=self.sigma * np.sqrt(delta)
+        ).sum()
 
-    def _maximum_likelihood_estimation(self, observations: pd.DataFrame, delta: float, to_array: bool = False) -> dict:
+    def _maximum_likelihood_estimation(
+        self, observations: pd.DataFrame, delta: float
+    ) -> dict:
         """
         Compute th explicit expression for maximum likelihood estimators of an ABM
         process as proposed in
@@ -133,7 +147,9 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         returns = observations.diff().dropna().to_numpy()
 
         # Equal to m = np.nanmean(returns) / delta
-        m = (observations.to_numpy()[-1, 0] - observations.to_numpy()[0, 0]) / (len(observations) * delta)
+        m = (observations.to_numpy()[-1, 0] - observations.to_numpy()[0, 0]) / (
+            len(observations) * delta
+        )
         s = np.nanstd(returns) / np.sqrt(delta)
         return {
             "mu": m,
@@ -173,7 +189,10 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
     """
 
-    _bounds = Bounds(ParameterBound("mu", float, -np.inf, np.inf), ParameterBound("sigma", float, 0.0, np.inf))
+    _bounds = Bounds(
+        ParameterBound("mu", float, -np.inf, np.inf),
+        ParameterBound("sigma", float, 0.0, np.inf),
+    )
 
     def __init__(self, mu: float | None = None, sigma: float | None = None):
         """
@@ -189,7 +208,12 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         self._validate_parameters()
 
     def _simulate(
-        self, initial_value: float, n_steps: int, delta: float = 1.0, n_simulations: int = 1, method: str = "exact"
+        self,
+        initial_value: float,
+        n_steps: int,
+        delta: float = 1.0,
+        n_simulations: int = 1,
+        method: str = "exact",
     ) -> pd.DataFrame:
         """
         Simulate Geometric Brownian Motion paths
@@ -207,9 +231,9 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         """
 
         # use standard normal
-        increments = (self.mu - 0.5 * self.sigma**2) * delta + self.sigma * np.sqrt(delta) * norm.rvs(
-            size=(n_steps + 1, n_simulations)
-        )
+        increments = (self.mu - 0.5 * self.sigma**2) * delta + self.sigma * np.sqrt(
+            delta
+        ) * norm.rvs(size=(n_steps + 1, n_simulations))
 
         increments = np.exp(increments)
         # setting initial condition
@@ -234,9 +258,15 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         log_prices = observations.apply(np.log).to_numpy()
 
         p, c = log_prices[:-1], log_prices[1:]
-        return norm.logpdf(c, loc=p - (self.mu - 0.5 * self.sigma**2) * delta, scale=self.sigma * np.sqrt(delta)).sum()
+        return norm.logpdf(
+            c,
+            loc=p - (self.mu - 0.5 * self.sigma**2) * delta,
+            scale=self.sigma * np.sqrt(delta),
+        ).sum()
 
-    def _maximum_likelihood_estimation(self, observations: pd.DataFrame, delta: float, to_array: bool = False) -> dict:
+    def _maximum_likelihood_estimation(
+        self, observations: pd.DataFrame, delta: float
+    ) -> dict:
         """
         Compute th explicit expression for maximum likelihood estimators of an ABM
         process as proposed in

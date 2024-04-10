@@ -183,7 +183,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         ).sum()
 
     def _maximum_likelihood_estimation(
-        self, observations: pd.DataFrame, delta: float, to_array: bool = False
+        self, observations: pd.DataFrame, delta: float
     ) -> dict:
         """
         Compute th explicit expression for maximum likelihood estimators of an Ornstein-Uhlenbeck
@@ -196,7 +196,6 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         :param observations: columns indicates the different paths
             and rows indicates the observations
         :param delta: sampling interval
-        :param to_array: option to return an array instead of a dict
 
         :return: parameters: mle parameters
         """
@@ -353,6 +352,10 @@ class CoxIngersollRoss(ABCMeanReverting):
 
         if method not in ["exact", "euler"]:
             raise TypeError("not valid choice for `method`")
+
+        if initial_value < 0:
+            raise ValueError(f"initial_value = {initial_value} < 0")
+
         # each column is a simulated path
         shape = (n_steps + 1, n_simulations)
         observations = initial_value * np.ones(shape)
@@ -363,48 +366,42 @@ class CoxIngersollRoss(ABCMeanReverting):
             # exact discretization
             dof = 4.0 * self.kappa * self.alpha / self.sigma**2
 
-            scale_factor = (self.sigma**2 * (1.0 - np.exp(-self.kappa * delta))) / (
-                4.0 * self.kappa
-            )
+            e = np.exp(-self.kappa * delta)
+            scale_factor = self.sigma**2 * (1.0 - e) / (4.0 * self.kappa)
 
-            if dof > 1:  # different algorithm numerically advantageous
+            if dof > 1:
+                # different algorithm numerically advantageous
                 chi = np.random.chisquare(dof - 1, size=shape)
                 for i in range(n_steps):
-                    item = observations[i, :] * np.exp(-self.kappa * delta) / scale_factor
+                    item = observations[i, :] * e / scale_factor
                     observations[i + 1, :] = scale_factor * (
                         (ran[i + 1, :] + np.sqrt(item)) ** 2 + chi[i + 1, :]
                     )
             else:
                 for i in range(n_steps):
-                    item = observations[i, :] * np.exp(-self.kappa * delta) / scale_factor
+                    item = observations[i, :] * e / scale_factor
                     p = np.random.poisson(item / 2, n_simulations)
                     chi = np.random.chisquare(dof + 2 * p, n_simulations)
                     observations[i + 1, :] = scale_factor * chi
 
-        elif method == "euler":  # Euler scheme (full truncation)
-            observations_h = initial_value * np.ones(
-                shape
-            )  # needed for the euler approximation
+        elif method == "euler":
+            # Euler scheme (full truncation)
 
             for i in range(n_steps):
-                observations_h[i + 1, :] = (
-                    observations_h[i, :]
-                    + self.kappa
-                    * (self.alpha - np.maximum(0, observations_h[i, :]))
-                    * delta
-                    + np.sqrt(np.maximum(0, observations_h[i, :]))
-                    * self.sigma
-                    * ran[i + 1, :]
-                    * np.sqrt(delta)
+                x = observations[i, :]
+                observations[i + 1, :] = (
+                    x
+                    + self.kappa * (self.alpha - x) * delta
+                    + x * self.sigma * ran[i + 1, :] * np.sqrt(delta)
                 )
-                observations[i + 1] = np.maximum(0, observations_h[i + 1, :])
+                observations[i + 1] = np.maximum(0, observations[i + 1, :])
 
         else:
             raise TypeError("Not valid choice for `method`")
 
         return pd.DataFrame(observations)
 
-    def _log_likelihood(self, observations, delta=1):
+    def _log_likelihood(self, observations: pd.DataFrame, delta: float = 1):
         """
         Log-likelihood function for CIR process
 
@@ -440,14 +437,13 @@ class CoxIngersollRoss(ABCMeanReverting):
         ).sum()
 
     def _pseudo_maximum_likelihood_estimation(
-        self, observations, delta: float = 1.0, to_array: bool = False
+        self, observations: pd.DataFrame, delta: float = 1.0
     ) -> dict:
         """
         Compute the explicit expression for pseudo-maximum likelihood estimators proposed by Nowman(1997)
 
         :param observations: columns indicates the different paths and the rows indicates observations
         :param delta: sampling interval
-        :param to_array: option to return an array instead of a dict
 
         :return: pseudo-mle parameters
         """
