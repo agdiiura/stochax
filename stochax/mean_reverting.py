@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from scipy.stats import ncx2, norm, gamma
+from numpy.random import Generator
 
 from .core import Bounds, ParameterBound, ABCStochasticProcess
 
@@ -82,6 +83,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         kappa: float | None = None,
         alpha: float | None = None,
         sigma: float | None = None,
+        rng: Generator | int | None = None,
     ):
         """
         Initialize the class
@@ -89,7 +91,10 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         :param kappa: mean reversion rate
         :param alpha: long term mean
         :param sigma: volatility coefficient
+        :param rng: The random state for generating simulations and bootstrap samples
         """
+
+        super().__init__(rng=rng)
 
         self.kappa = kappa
         self.alpha = alpha
@@ -104,11 +109,9 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         :params n_simulations: number of values to be simulated
         :return: the stationarity distribution
         """
-        return norm.rvs(
-            loc=self.alpha,
-            scale=self.sigma * np.sqrt(1.0 / (2.0 * self.kappa)),
-            size=n_simulations,
-        )
+        rv = norm(loc=self.alpha, scale=self.sigma * np.sqrt(1.0 / (2.0 * self.kappa)))
+        rv.random_state = self._rng
+        return rv.rvs(size=n_simulations)
 
     def _simulate(
         self,
@@ -138,10 +141,12 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
 
         e = np.exp(-self.kappa * delta)
         # use standard normal
+        rv = norm()
+        rv.random_state = self._rng
         brownian = (
             self.sigma
             * np.sqrt((1.0 - e**2) / (2 * self.kappa))
-            * norm.rvs(size=(n_steps + 1, n_simulations))
+            * rv.rvs(size=(n_steps + 1, n_simulations))
         )
 
         for i, b in enumerate(brownian[1:]):
@@ -287,6 +292,7 @@ class CoxIngersollRoss(ABCMeanReverting):
         kappa: float | None = None,
         alpha: float | None = None,
         sigma: float | None = None,
+        rng: Generator | int | None = None,
     ):
         """
         Initialize the class
@@ -294,7 +300,10 @@ class CoxIngersollRoss(ABCMeanReverting):
         :param kappa: mean reversion rate
         :param alpha: long term mean
         :param sigma: volatility coefficient
+        :param rng: The random state for generating simulations and bootstrap samples
         """
+
+        super().__init__(rng=rng)
 
         self.kappa = kappa
         self.alpha = alpha
@@ -320,12 +329,15 @@ class CoxIngersollRoss(ABCMeanReverting):
         :return: the stationarity distribution
         """
 
-        return gamma.rvs(
+        # shape(must be >0), location, scale(must be >0)
+        rv = gamma(
             2.0 * self.kappa * self.alpha / self.sigma**2,
             0,
             self.sigma**2 / (2 * self.kappa),
-            size=n_simulations,
-        )  # shape(must be >0), location, scale(must be >0)
+        )
+        rv.random_state = self._rng
+
+        return rv.rvs(size=n_simulations)
 
     def _simulate(
         self,
@@ -360,7 +372,9 @@ class CoxIngersollRoss(ABCMeanReverting):
         shape = (n_steps + 1, n_simulations)
         observations = initial_value * np.ones(shape)
 
-        ran = norm.rvs(size=shape)
+        rv = norm()
+        rv.random_state = self._rng
+        ran = rv.rvs(size=shape)
 
         if method == "exact":
             # exact discretization
@@ -371,7 +385,7 @@ class CoxIngersollRoss(ABCMeanReverting):
 
             if dof > 1:
                 # different algorithm numerically advantageous
-                chi = np.random.chisquare(dof - 1, size=shape)
+                chi = self._rng.chisquare(dof - 1, size=shape)
                 for i in range(n_steps):
                     item = observations[i, :] * e / scale_factor
                     observations[i + 1, :] = scale_factor * (
@@ -380,8 +394,8 @@ class CoxIngersollRoss(ABCMeanReverting):
             else:
                 for i in range(n_steps):
                     item = observations[i, :] * e / scale_factor
-                    p = np.random.poisson(item / 2, n_simulations)
-                    chi = np.random.chisquare(dof + 2 * p, n_simulations)
+                    p = self._rng.poisson(item / 2, n_simulations)
+                    chi = self._rng.chisquare(dof + 2 * p, n_simulations)
                     observations[i + 1, :] = scale_factor * chi
 
         elif method == "euler":

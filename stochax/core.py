@@ -36,7 +36,7 @@ import pandas as pd
 
 from joblib import Parallel, delayed
 from scipy.stats import truncnorm
-from numpy.random import RandomState
+from numpy.random import Generator
 from arch.bootstrap import CircularBlockBootstrap, optimal_block_length
 from scipy.optimize import minimize
 
@@ -266,11 +266,25 @@ class ABCStochasticProcess(abc.ABC):
     _min_optimal_length = 25
     _bounds = None
 
+    def __init__(self, rng: Generator | int | None):
+        """
+        Initialize the class
+
+        :param rng: The random state for generating simulations and bootstrap samples
+        """
+
+        if rng is None:
+            rng = np.random.default_rng()
+        elif isinstance(rng, int):
+            rng = np.random.default_rng(rng)
+
+        self._rng = rng
+
     @property
     def parameters(self) -> dict:
         """Return the model parameters"""
         parameters = signature(self.__init__).parameters
-        return {par: getattr(self, par) for par in parameters}
+        return {par: getattr(self, par) for par in parameters if par != "rng"}
 
     @property
     def bounds(self) -> Bounds:
@@ -409,9 +423,14 @@ class ABCStochasticProcess(abc.ABC):
 
         best_result = None
         best_ll = np.inf
+        rv_list = list()
+        for itm in self.bounds.to_tuple():
+            rv = truncnorm(a=itm[0], b=itm[1])
+            rv.random_state = self._rng
+            rv_list.append(rv)
 
         for _ in range(n_trials):
-            it = (truncnorm.rvs(a=itm[0], b=itm[1]) for itm in self.bounds.to_tuple())
+            it = (rv.rvs() for rv in rv_list)
 
             result = minimize(
                 objective,
@@ -459,7 +478,6 @@ class ABCStochasticProcess(abc.ABC):
         delta: float = 1.0,
         n_boot_resamples: int = 10,
         n_jobs: int = 2,
-        rs: RandomState | None | int = None,
     ):
         """
         Perform the non-parametric bootstrap using circular-block bootstrap
@@ -487,14 +505,13 @@ class ABCStochasticProcess(abc.ABC):
         :param delta: sampling interval
         :param n_boot_resamples: number bootstrap resamples
         :param n_jobs: number of parallel jobs
-        :param rs: random state for non-parametric sample
         """
 
         optimal_length = max(
             int(optimal_block_length(observations).circular), self._min_optimal_length
         )
 
-        bs_c = CircularBlockBootstrap(optimal_length, observations, random_state=rs)
+        bs_c = CircularBlockBootstrap(optimal_length, observations, seed=self._rng)
 
         result = Parallel(n_jobs=n_jobs)(
             delayed(lambda x: f(x, delta=delta))(*pos_data)
@@ -566,7 +583,6 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        rs: RandomState | None | int = None,
     ) -> CalibrationResult:
         """
         Calibrate the parameters of the stochastic process using various estimation methods.
@@ -615,7 +631,6 @@ class ABCStochasticProcess(abc.ABC):
             for non-parametric bootstrap
         :param n_boot_resamples: The number of bootstrap resamples to perform during calibration
         :param n_jobs: The number of parallel jobs to use during calibration
-        :param rs: The random state for generating bootstrap samples
 
         :return: An object that stores the results of the calibration procedure, including the calibrated
             parameters, observations used for calibration, calibration method, number of bootstrap resamples, number of
@@ -642,7 +657,6 @@ class ABCStochasticProcess(abc.ABC):
             method=method,
             n_boot_resamples=n_boot_resamples,
             n_jobs=n_jobs,
-            rs=rs,
         )
         # test if parameters are well-defined
         self._validate_parameters()
@@ -654,7 +668,7 @@ class ABCStochasticProcess(abc.ABC):
             method=method,
             n_boot_resamples=n_boot_resamples,
             n_jobs=n_jobs,
-            rs=rs,
+            seed=self._rng,
             bootstrap_results=self._bootstrap_results,
         )
 
@@ -665,7 +679,6 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        rs: RandomState | None | int = None,
     ):
         """
         Calibrate the stochastic process and store parameters as attribute
@@ -690,7 +703,6 @@ class ABCStochasticProcess(abc.ABC):
         :param method: choices are 'mle', 'pseudo_mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
         :param n_boot_resamples: number bootstrap resamples
         :param n_jobs: number of parallel jobs
-        :param rs: bootstrap random state
         """
 
         if hasattr(self, "_maximum_likelihood_estimation"):
@@ -732,7 +744,6 @@ class ABCStochasticProcess(abc.ABC):
                 delta=delta,
                 n_boot_resamples=n_boot_resamples,
                 n_jobs=n_jobs,
-                rs=rs,
             )
         else:
             raise TypeError(

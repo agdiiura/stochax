@@ -62,7 +62,7 @@ class CalibrationResult(object):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        rs: RandomState | int | None = None,
+        seed: RandomState | int | None = None,
         bootstrap_results: pd.DataFrame | None = None,
     ):
         """
@@ -74,7 +74,7 @@ class CalibrationResult(object):
         :param method: choices are 'mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
         :param n_boot_resamples: number bootstrap resamples
         :param n_jobs: number of parallel jobs
-        :param rs: bootstrap random state
+        :param seed: bootstrap random state
         :param bootstrap_results: a DataFrame contained the results of bootstrap procedure
 
         Example:
@@ -97,7 +97,7 @@ class CalibrationResult(object):
         self._method = method
         self._n_boot_resamples = n_boot_resamples
         self._n_jobs = n_jobs
-        self._rs = rs
+        self._seed = seed
         self._bootstrap_results = bootstrap_results
 
         self._msg = f"{self.__class__.__name__}({self._process}, observations.shape={self._observations.shape})"
@@ -132,7 +132,9 @@ class CalibrationResult(object):
             if size > 0:
                 n_bins = 2 * np.max([np.sqrt(size) + 1, np.log2(size) + 1, 25])
                 bin_size = (x.max() - x.min()) / n_bins
-                out = ff.create_distplot(hist_data=[x], group_labels=[k], bin_size=bin_size, colors=[color])
+                out = ff.create_distplot(
+                    hist_data=[x], group_labels=[k], bin_size=bin_size, colors=[color]
+                )
                 for d in out.data:
                     fig.add_trace(d, row=charts[k], col=1)
 

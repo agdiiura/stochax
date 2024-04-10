@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 
 from scipy.stats import norm
+from numpy.random import Generator
 
 from .core import Bounds, ParameterBound, ABCStochasticProcess
 
@@ -58,13 +59,21 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         ParameterBound("sigma", float, 0.0, np.inf),
     )
 
-    def __init__(self, mu: float | None = None, sigma: float | None = None):
+    def __init__(
+        self,
+        mu: float | None = None,
+        sigma: float | None = None,
+        rng: Generator | int | None = None,
+    ):
         """
         Initialize the class
 
         :param mu: drift coefficient
         :param sigma: diffusion coefficient
+        :param rng: The random state for generating simulations and bootstrap samples
         """
+
+        super().__init__(rng=rng)
 
         self.mu = mu
         self.sigma = sigma
@@ -95,7 +104,9 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         """
 
         # use standard normal
-        increments = self.mu * delta + self.sigma * np.sqrt(delta) * norm.rvs(
+        rv = norm()
+        rv.random_state = self._rng
+        increments = self.mu * delta + self.sigma * np.sqrt(delta) * rv.rvs(
             size=(n_steps + 1, n_simulations)
         )
         # setting initial condition
@@ -194,13 +205,21 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         ParameterBound("sigma", float, 0.0, np.inf),
     )
 
-    def __init__(self, mu: float | None = None, sigma: float | None = None):
+    def __init__(
+        self,
+        mu: float | None = None,
+        sigma: float | None = None,
+        rng: Generator | int | None = None,
+    ):
         """
         Initialize the class
 
         :param mu: drift coefficient
         :param sigma: diffusion coefficient
+        :param rng: The random state for generating simulations and bootstrap samples
         """
+
+        super().__init__(rng=rng)
 
         self.mu = mu
         self.sigma = sigma
@@ -231,9 +250,11 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         """
 
         # use standard normal
+        rv = norm()
+        rv.random_state = self._rng
         increments = (self.mu - 0.5 * self.sigma**2) * delta + self.sigma * np.sqrt(
             delta
-        ) * norm.rvs(size=(n_steps + 1, n_simulations))
+        ) * rv.rvs(size=(n_steps + 1, n_simulations))
 
         increments = np.exp(increments)
         # setting initial condition
