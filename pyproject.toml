@@ -40,7 +40,7 @@ docs = [
     "GitPython>=3.1.3",
     "recommonmark>=0.5.0",
     "requests>=2.23.0",
-    "Sphinx==7.2.6",
+    "Sphinx==7.3.7",
     "sphinx-autodoc-typehints>=1.20.0",
     "sphinx-rtd-theme>=2.0.0"
 ]
