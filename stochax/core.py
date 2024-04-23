@@ -696,7 +696,7 @@ class ABCStochasticProcess(abc.ABC):
                 def f_mle(observations: pd.DataFrame,
                     delta: float = 1.,
                     **kwargs
-                ): -> dict | np.ndarray
+                ): -> dict
 
         :param observations: columns indicates the different paths and rows indicates the observations
         :param delta: sampling interval

@@ -306,10 +306,13 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         returns = observations.apply(np.log).diff().dropna().to_numpy().ravel()
 
         s = np.nanstd(returns) / np.sqrt(delta)
-        m = np.nanmean(returns) / delta + 0.5 * s**2
+        # Equal to q = np.nanmean(returns) / delta
+        m = (observations.to_numpy()[-1, 0] - observations.to_numpy()[0, 0]) / (
+            len(observations) * delta
+        )
 
         return {
-            "mu": m,
+            "mu": m + 0.5 * s**2,
             "sigma": s,
         }
 
