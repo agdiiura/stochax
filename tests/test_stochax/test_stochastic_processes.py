@@ -252,6 +252,40 @@ class TestStochasticProcess(unittest.TestCase):
             att = getattr(obj, key)
             self.assertEqual(att, val)
 
+    def test_goodness_of_calibration(self):
+        """Test the calibration performances"""
+
+        process = self.process(**self.init_kwargs)
+
+        observations = process.simulate(
+            delta=self.delta,
+            initial_value=self.initial_value,
+            n_simulations=1000,
+            n_steps=500,
+        )
+
+        self.assertTrue(observations.notnull().all().all())
+
+        calibration_results = list()
+
+        for col in observations.columns:
+            res = process.calibrate(
+                observations=observations[col], delta=self.delta, method="mle"
+            )
+            calibration_results.append(res.process.parameters)
+
+        calibration_results = pd.DataFrame(calibration_results)
+
+        for k, v in self.init_kwargs.items():
+            m = calibration_results[k].mean()
+            s = calibration_results[k].std()
+
+            f = 1 if k != "mu" else 25
+
+            msg = f"`{k}` True value: {v}, range: [{m - f * s}, {m + f * s}]"
+            self.assertTrue(v > m - f * s, msg=msg)
+            self.assertTrue(v < m + f * s, msg=msg)
+
 
 class TestOrnsteinUhlenbeck(TestStochasticProcess):
     """The class for OrnsteinUhlenbeck test"""
@@ -338,6 +372,7 @@ def build_suite(model: str = "all"):
         "test_calibrate",
         "test_log_likelihood",
         "test_copy",
+        "test_goodness_of_calibration",
     ]
 
     models = {

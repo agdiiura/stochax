@@ -759,7 +759,7 @@ class ABCStochasticProcess(abc.ABC):
         :param observations: input data
         :return: output data
         """
-        if isinstance(observations, (np.ndarray, list)):
+        if isinstance(observations, (np.ndarray, list, dict)):
             observations = pd.DataFrame(observations)
         elif isinstance(observations, pd.Series):
             observations = observations.to_frame()
