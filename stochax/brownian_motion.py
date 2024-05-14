@@ -155,12 +155,11 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         :return: the mle parameters
         """
 
-        returns = observations.diff().dropna().to_numpy()
+        prices = observations.to_numpy().ravel()
+        returns = np.diff(prices)
 
         # Equal to m = np.nanmean(returns) / delta
-        m = (observations.to_numpy()[-1, 0] - observations.to_numpy()[0, 0]) / (
-            len(observations) * delta
-        )
+        m = (prices[-1] - prices[0]) / (len(observations) * delta)
         s = np.nanstd(returns) / np.sqrt(delta)
         return {
             "mu": m,
@@ -303,13 +302,12 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         :return: the mle parameters
         """
 
-        returns = observations.apply(np.log).diff().dropna().to_numpy().ravel()
+        prices = observations.to_numpy().ravel()
+        returns = np.diff(np.log(prices))
 
         s = np.nanstd(returns) / np.sqrt(delta)
         # Equal to q = np.nanmean(returns) / delta
-        m = (observations.to_numpy()[-1, 0] - observations.to_numpy()[0, 0]) / (
-            len(observations) * delta
-        )
+        m = (prices[-1] - prices[0]) / (len(observations) * delta)
 
         return {
             "mu": m + 0.5 * s**2,
