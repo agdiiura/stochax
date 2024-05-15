@@ -276,11 +276,13 @@ class TestStochasticProcess(unittest.TestCase):
 
         calibration_results = pd.DataFrame(calibration_results)
 
+        map_factor = {("GeometricBrownianMotion", "mu"): 25}
+
         for k, v in self.init_kwargs.items():
             m = calibration_results[k].mean()
             s = calibration_results[k].std()
 
-            f = 1 if k != "mu" else 25
+            f = map_factor.get((process.__class__.__name__, k), 1)
 
             msg = f"`{k}` True value: {v}, range: [{m - f * s}, {m + f * s}]"
             self.assertTrue(v > m - f * s, msg=msg)
