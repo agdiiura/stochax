@@ -48,7 +48,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
 
     .. math::
 
-        dS_t = \\kappa * ( \\alpha - S_t) * dt + \\sigma * dB_t
+        dS_t = \kappa * ( \alpha - S_t) * dt + \sigma * dB_t
 
     where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
 
@@ -257,7 +257,7 @@ class CoxIngersollRoss(ABCMeanReverting):
 
     .. math::
 
-        dS_t = \\kappa * ( \\alpha - S_t) * dt + \\sigma \\sqrt{S_t} * dB_t
+        dS_t = \kappa * ( \alpha - S_t) * dt + \sigma \sqrt{S_t} * dB_t
 
     where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
 

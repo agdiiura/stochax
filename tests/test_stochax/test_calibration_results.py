@@ -56,7 +56,9 @@ class TestCalibrationResult(unittest.TestCase):
         process = MockProcess(a=1.0, b=2.0)
         cls.delta = 1
         cls.method = "fake_bootstrap"
-        cls.bootstrap_results = pd.DataFrame({k: simulate_univariate_process(100) for k in process.parameters.keys()})
+        cls.bootstrap_results = pd.DataFrame(
+            {k: simulate_univariate_process(100) for k in process.parameters.keys()}
+        )
 
         cls.fit = CalibrationResult(
             process=process,
@@ -110,9 +112,15 @@ class TestCalibrationResult(unittest.TestCase):
         s = self.fit.get_summary()
         self.assertIsInstance(s, dict)
 
-        expected = ("LogLikelihood", "AIC", "BIC")
-        for e in expected:
-            self.assertIn(e, s.keys(), msg=f"Error with `{e}`")
+        expected = {
+            "LogLikelihood",
+            "n_parameters",
+            "n_observations",
+            "AIC",
+            "BIC",
+            "HQC",
+        }
+        self.assertEqual(expected, set(s.keys()))
 
 
 def build_suite():

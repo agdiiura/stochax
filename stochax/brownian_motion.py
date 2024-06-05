@@ -30,7 +30,7 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
     .. math::
 
-        dS_t = \\mu * dt + \\sigma * dB_t
+        dS_t = \mu * dt + \sigma * dB_t
 
     where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
 
@@ -175,7 +175,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
     .. math::
 
-        dS_t = S_t(\\mu * dt + \\sigma * dB_t)
+        dS_t = S_t(\mu * dt + \sigma * dB_t)
 
     where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
 
@@ -258,7 +258,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         increments = np.exp(increments)
         # setting initial condition
         increments[0] = [initial_value] * n_simulations
-        return pd.DataFrame(increments.cumprod(axis=0))
+        return pd.DataFrame(increments).cumprod(axis=0)
 
     def _log_likelihood(self, observations: pd.DataFrame, delta: float = 1.0) -> float:
         """
@@ -302,11 +302,11 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         :return: the mle parameters
         """
 
-        prices = observations.to_numpy().ravel()
-        returns = np.diff(np.log(prices))
+        prices = np.log(observations.to_numpy().ravel())
+        returns = np.diff(prices)
 
         s = np.nanstd(returns) / np.sqrt(delta)
-        # Equal to q = np.nanmean(returns) / delta
+        # Equal to m = np.nanmean(returns) / delta
         m = (prices[-1] - prices[0]) / (len(observations) * delta)
 
         return {

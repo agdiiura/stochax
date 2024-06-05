@@ -228,7 +228,11 @@ class TestStochasticProcess(unittest.TestCase):
                     f'\nUsing method `{kw["method"]}`\n'
                     f'Estimated process:\n{process}'
                 )
-                print("\n".join(f" - {k}: {v:.8}" for k, v in r.get_summary().items()))
+                print(
+                    "\n".join(
+                        f" - {k}: {float(v):.8}" for k, v in r.get_summary().items()
+                    )
+                )
 
     def test_log_likelihood(self):
         """Test the log_likelihood method"""
@@ -276,7 +280,7 @@ class TestStochasticProcess(unittest.TestCase):
 
         calibration_results = pd.DataFrame(calibration_results)
 
-        map_factor = {("GeometricBrownianMotion", "mu"): 25}
+        map_factor = {("GeometricBrownianMotion", "mu"): 3}
 
         for k, v in self.init_kwargs.items():
             m = calibration_results[k].mean()
