@@ -4,10 +4,11 @@ FOLDER=test_stochax
 COMMAND="python suite.py --test"
 
 export N_JOBS="1"
+export LONG_TEST="False"
 
-echo ">>>>>>>>>>>>"
-echo ">>> stochax"
-echo ">>>>>>>>>>>>"
+echo "#########################################"
+echo "### Execute tests for stochax package ###"
+echo "#########################################"
 
 
 $COMMAND $FOLDER/test_calibration_results.py

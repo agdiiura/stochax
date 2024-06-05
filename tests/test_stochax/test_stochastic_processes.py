@@ -31,6 +31,9 @@ try:
 except TypeError:
     pass
 rng = np.random.default_rng(SEED)
+LONG_TEST = os.environ.get("LONG_TEST", True)
+if LONG_TEST == "False":
+    LONG_TEST = False
 
 
 class TestStochasticProcess(unittest.TestCase):
@@ -270,27 +273,36 @@ class TestStochasticProcess(unittest.TestCase):
 
         self.assertTrue(observations.notnull().all().all())
 
-        calibration_results = list()
+        if LONG_TEST:
+            methods = ["mle", "parametric_bootstrap"]
+        else:
+            methods = ["mle"]
 
-        for col in observations.columns:
-            res = process.calibrate(
-                observations=observations[col], delta=self.delta, method="mle"
-            )
-            calibration_results.append(res.process.parameters)
+        for m in methods:
+            calibration_results = list()
 
-        calibration_results = pd.DataFrame(calibration_results)
+            for col in observations.columns:
+                res = process.calibrate(
+                    observations=observations[col],
+                    delta=self.delta,
+                    method=m,
+                    n_boot_resamples=25,
+                )
+                calibration_results.append(res.process.parameters)
 
-        map_factor = {("GeometricBrownianMotion", "mu"): 3}
+            calibration_results = pd.DataFrame(calibration_results)
 
-        for k, v in self.init_kwargs.items():
-            m = calibration_results[k].mean()
-            s = calibration_results[k].std()
+            map_factor = {("GeometricBrownianMotion", "mu"): 3}
 
-            f = map_factor.get((process.__class__.__name__, k), 1)
+            for k, v in self.init_kwargs.items():
+                m = calibration_results[k].mean()
+                s = calibration_results[k].std()
 
-            msg = f"`{k}` True value: {v}, range: [{m - f * s}, {m + f * s}]"
-            self.assertTrue(v > m - f * s, msg=msg)
-            self.assertTrue(v < m + f * s, msg=msg)
+                f = map_factor.get((process.__class__.__name__, k), 1)
+
+                msg = f"Method `{m}`; `{k}` True value: {v}, range: [{m - f * s}, {m + f * s}]"
+                self.assertTrue(v > m - f * s, msg=msg)
+                self.assertTrue(v < m + f * s, msg=msg)
 
 
 class TestOrnsteinUhlenbeck(TestStochasticProcess):
