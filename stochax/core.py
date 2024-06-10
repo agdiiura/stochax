@@ -508,7 +508,8 @@ class ABCStochasticProcess(abc.ABC):
         """
 
         optimal_length = max(
-            int(optimal_block_length(observations).circular), self._min_optimal_length
+            int(optimal_block_length(observations).circular.iloc[0]),
+            self._min_optimal_length,
         )
 
         bs_c = CircularBlockBootstrap(optimal_length, observations, seed=self._rng)
