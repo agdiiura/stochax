@@ -274,25 +274,25 @@ class TestStochasticProcess(unittest.TestCase):
         self.assertTrue(observations.notnull().all().all())
 
         if LONG_TEST:
-            methods = ["mle", "parametric_bootstrap"]
+            methods = ["mle", "parametric_bootstrap", "numerical_mle"]
         else:
             methods = ["mle"]
 
-        for m in methods:
+        map_factor = {("GeometricBrownianMotion", "mu"): 3}
+
+        for method in methods:
             calibration_results = list()
 
             for col in observations.columns:
                 res = process.calibrate(
                     observations=observations[col],
                     delta=self.delta,
-                    method=m,
+                    method=method,
                     n_boot_resamples=25,
                 )
                 calibration_results.append(res.process.parameters)
 
             calibration_results = pd.DataFrame(calibration_results)
-
-            map_factor = {("GeometricBrownianMotion", "mu"): 3}
 
             for k, v in self.init_kwargs.items():
                 m = calibration_results[k].mean()
@@ -300,7 +300,12 @@ class TestStochasticProcess(unittest.TestCase):
 
                 f = map_factor.get((process.__class__.__name__, k), 1)
 
-                msg = f"Method `{m}`; `{k}` True value: {v}, range: [{m - f * s}, {m + f * s}]"
+                msg = (
+                    f"Method `{method}`; `{k}` \n"
+                    f"True value: {v}, Mean value: {m} \n"
+                    f"Range: [{m - f * s}, {m + f * s}]"
+                )
+
                 self.assertTrue(v > m - f * s, msg=msg)
                 self.assertTrue(v < m + f * s, msg=msg)
 
