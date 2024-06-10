@@ -379,10 +379,10 @@ class ABCStochasticProcess(abc.ABC):
         This method computes the log-likelihood function of the stochastic process based on the provided observations
         and sampling interval, using the parameters stored as attributes within the object.
 
-        :param observations: A DataFrame containing observations of the stochastic process. Each column
-            represents a separate path or realization of the process, and each row represents a separate time step.
-            The DataFrame should have dimensions (n_observations x n_paths), where n_observations is the number of
-            observations per path, and n_paths is the number of paths.
+        :param observations: A DataFrame containing observations of the stochastic process. The column
+            represents a path or realization of the process, and each row represents a separate time step.
+            The DataFrame should have dimensions (n_observations, ), where n_observations is the number of
+            observations per path.
         :param delta: The sampling interval between consecutive observations
 
         :return: The value of the log-likelihood function computed for the given observations
@@ -413,8 +413,7 @@ class ABCStochasticProcess(abc.ABC):
             A Review and Comparative Study."
             Mathematics 9.8 (2021): 859.
 
-        :param observations: columns indicates the different paths
-            and rows indicates the observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
         """
         bounds = self.bounds.to_tuple()
@@ -458,8 +457,7 @@ class ABCStochasticProcess(abc.ABC):
         Set coefficients to mle estimators. Coefficients_std remains None
 
         :param f: estimate function
-        :param observations: columns indicates the different paths
-            and rows indicates the observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
         """
 
@@ -501,7 +499,7 @@ class ABCStochasticProcess(abc.ABC):
         Set coefficients_std to non-parametric bootstrap coefficients std.
 
         :param f: estimate function
-        :param observations: columns indicates the different paths and rows indicates the observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
         :param n_boot_resamples: number bootstrap resamples
         :param n_jobs: number of parallel jobs
@@ -544,7 +542,7 @@ class ABCStochasticProcess(abc.ABC):
         Set coefficients_std to parametric bootstrap coefficients std.
 
         :param f: estimate function
-        :param observations: columns indicates the different paths and rows indicates the observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
         :param n_boot_resamples: number bootstrap resamples
         :param n_jobs: number of parallel jobs
@@ -622,10 +620,10 @@ class ABCStochasticProcess(abc.ABC):
              The Annals of Statistics (1994): 995-1012.
 
 
-        :param observations: A DataFrame containing observations of the stochastic process. Each column
-            represents a separate path or realization of the process, and each row represents a separate time step.
-            The DataFrame should have dimensions (n_observations x n_paths), where n_observations is the number of
-            observations per path, and n_paths is the number of paths.
+        :param observations: A DataFrame containing observations of the stochastic process. The column
+            represents a path or realization of the process, and each row represents a separate time step.
+            The DataFrame should have dimensions (n_observations, ), where n_observations is the number of
+            observations per path.
         :param delta: The sampling interval between consecutive observations
         :param method: The calibration method to use. Choices are 'mle' for Maximum Likelihood Estimation,
             'parametric_bootstrap' for parametric bootstrap, and 'non_parametric_bootstrap'
@@ -699,7 +697,7 @@ class ABCStochasticProcess(abc.ABC):
                     **kwargs
                 ): -> dict
 
-        :param observations: columns indicates the different paths and rows indicates the observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
         :param method: choices are 'mle', 'pseudo_mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
         :param n_boot_resamples: number bootstrap resamples

@@ -171,8 +171,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             Data with Application to Intraday Pairs Trading Strategy."
             arXiv preprint arXiv:1811.09312 (2018).
 
-        :param observations: columns indicates the different
-            paths and rows indicates the observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
         :return value: maximum of a log-likelihood function
         """
@@ -198,8 +197,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             "Parameter estimation and bias correction for diffusion processes."
             Journal of Econometrics 149.1 (2009): 65-81.
 
-        :param observations: columns indicates the different paths
-            and rows indicates the observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
 
         :return: parameters: mle parameters
@@ -456,7 +454,7 @@ class CoxIngersollRoss(ABCMeanReverting):
         """
         Compute the explicit expression for pseudo-maximum likelihood estimators proposed by Nowman(1997)
 
-        :param observations: columns indicates the different paths and the rows indicates observations
+        :param observations: column indicates the path and rows indicates the observations
         :param delta: sampling interval
 
         :return: pseudo-mle parameters
