@@ -31,6 +31,9 @@ try:
 except TypeError:
     pass
 rng = np.random.default_rng(SEED)
+LONG_TEST = os.environ.get("LONG_TEST", True)
+if LONG_TEST == "False":
+    LONG_TEST = False
 
 
 class TestStochasticProcess(unittest.TestCase):
@@ -228,7 +231,11 @@ class TestStochasticProcess(unittest.TestCase):
                     f'\nUsing method `{kw["method"]}`\n'
                     f'Estimated process:\n{process}'
                 )
-                print("\n".join(f" - {k}: {v:.8}" for k, v in r.get_summary().items()))
+                print(
+                    "\n".join(
+                        f" - {k}: {float(v):.8}" for k, v in r.get_summary().items()
+                    )
+                )
 
     def test_log_likelihood(self):
         """Test the log_likelihood method"""
@@ -266,27 +273,41 @@ class TestStochasticProcess(unittest.TestCase):
 
         self.assertTrue(observations.notnull().all().all())
 
-        calibration_results = list()
+        if LONG_TEST:
+            methods = ["mle", "parametric_bootstrap", "numerical_mle"]
+        else:
+            methods = ["mle"]
 
-        for col in observations.columns:
-            res = process.calibrate(
-                observations=observations[col], delta=self.delta, method="mle"
-            )
-            calibration_results.append(res.process.parameters)
+        map_factor = {("GeometricBrownianMotion", "mu"): 3}
 
-        calibration_results = pd.DataFrame(calibration_results)
+        for method in methods:
+            calibration_results = list()
 
-        map_factor = {("GeometricBrownianMotion", "mu"): 25}
+            for col in observations.columns:
+                res = process.calibrate(
+                    observations=observations[col],
+                    delta=self.delta,
+                    method=method,
+                    n_boot_resamples=25,
+                )
+                calibration_results.append(res.process.parameters)
 
-        for k, v in self.init_kwargs.items():
-            m = calibration_results[k].mean()
-            s = calibration_results[k].std()
+            calibration_results = pd.DataFrame(calibration_results)
 
-            f = map_factor.get((process.__class__.__name__, k), 1)
+            for k, v in self.init_kwargs.items():
+                m = calibration_results[k].mean()
+                s = calibration_results[k].std()
 
-            msg = f"`{k}` True value: {v}, range: [{m - f * s}, {m + f * s}]"
-            self.assertTrue(v > m - f * s, msg=msg)
-            self.assertTrue(v < m + f * s, msg=msg)
+                f = map_factor.get((process.__class__.__name__, k), 1)
+
+                msg = (
+                    f"Method `{method}`; `{k}` \n"
+                    f"True value: {v}, Mean value: {m} \n"
+                    f"Range: [{m - f * s}, {m + f * s}]"
+                )
+
+                self.assertTrue(v > m - f * s, msg=msg)
+                self.assertTrue(v < m + f * s, msg=msg)
 
 
 class TestOrnsteinUhlenbeck(TestStochasticProcess):

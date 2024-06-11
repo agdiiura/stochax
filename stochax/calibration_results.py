@@ -173,7 +173,14 @@ class CalibrationResult(object):
 
     def get_summary(self) -> dict:
         """
-        Collect results and fit statistics.
+        Collect results and fit statistics:
+
+            * LogLikelihood: the log-likelihood
+            * n_params: number of model parameters
+            * n_observations: number of records used to estimate the parameters
+            * AIC: Akaike information criterion
+            * BIC: Bayesian information criterion
+            * HQC: Hannan–Quinn information criterion
 
         :return: Information about the fit.
         """
@@ -186,8 +193,11 @@ class CalibrationResult(object):
         n_obs = len(self._observations)
 
         summary["LogLikelihood"] = ll
+        summary["n_parameters"] = n_params
+        summary["n_observations"] = n_obs
         summary["AIC"] = 2.0 * n_params - 2.0 * ll
         summary["BIC"] = np.log(n_obs) * n_params - 2.0 * ll
+        summary["HQC"] = 2.0 * n_params * np.log(np.log(n_obs)) - 2.0 * ll
 
         return summary
 
