@@ -39,7 +39,7 @@ jobs:
         # stop the build if there are Python syntax errors or undefined names
         mkdir -p tests/test-reports
         # flake8 stochax --format junit-xml >tests/test-reports/TEST-test_flake8-"$(date +"%Y%m%d%H%M%S")".xml
-        ruff stochax
+        ruff check stochax
     - name: Test library
       run: |
         cd tests

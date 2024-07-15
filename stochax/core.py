@@ -106,7 +106,7 @@ class ParameterBound(object):
         :param upper: The upper bound value for the parameter
         """
         self.parameter = parameter
-        if att_type == float:
+        if att_type is float:
             att_type = (float, int)
         self.att_type = att_type
         if lower > upper:
