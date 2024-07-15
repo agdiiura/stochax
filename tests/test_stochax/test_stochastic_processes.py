@@ -34,6 +34,7 @@ rng = np.random.default_rng(SEED)
 LONG_TEST = os.environ.get("LONG_TEST", True)
 if LONG_TEST == "False":
     LONG_TEST = False
+SCALE = 0.05
 
 
 class TestStochasticProcess(unittest.TestCase):
@@ -315,9 +316,9 @@ class TestOrnsteinUhlenbeck(TestStochasticProcess):
 
     process = OrnsteinUhlenbeck
     init_kwargs = {
-        "kappa": rng.normal(loc=1.2, scale=0.01),
-        "alpha": rng.normal(loc=0.9, scale=0.01),
-        "sigma": rng.normal(loc=0.9, scale=0.01),
+        "kappa": rng.normal(loc=1.2, scale=SCALE),
+        "alpha": rng.normal(loc=0.9, scale=SCALE),
+        "sigma": rng.normal(loc=0.9, scale=SCALE),
     }
     calibrate_kwargs = [
         dict(method="mle"),
@@ -334,9 +335,9 @@ class TestCoxIngersollRoss(TestStochasticProcess):
 
     process = CoxIngersollRoss
     init_kwargs = {
-        "kappa": rng.normal(loc=1.2, scale=0.01),
-        "alpha": rng.normal(loc=1.9, scale=0.01),
-        "sigma": rng.normal(loc=0.9, scale=0.01),
+        "kappa": rng.normal(loc=1.2, scale=SCALE),
+        "alpha": rng.normal(loc=1.9, scale=SCALE),
+        "sigma": rng.normal(loc=0.9, scale=SCALE),
     }
     calibrate_kwargs = [
         dict(method="pseudo_mle"),
@@ -353,8 +354,8 @@ class TestArithmeticBrownianMotion(TestStochasticProcess):
 
     process = ArithmeticBrownianMotion
     init_kwargs = {
-        "mu": rng.normal(loc=0, scale=0.01),
-        "sigma": rng.normal(loc=0.9, scale=0.01),
+        "mu": rng.normal(loc=0, scale=SCALE),
+        "sigma": rng.normal(loc=0.9, scale=SCALE),
     }
     calibrate_kwargs = [
         dict(method="mle"),
@@ -371,8 +372,8 @@ class TestGeometricBrownianMotion(TestStochasticProcess):
 
     process = GeometricBrownianMotion
     init_kwargs = {
-        "mu": rng.normal(loc=0, scale=0.01),
-        "sigma": rng.normal(loc=0.9, scale=0.01),
+        "mu": rng.normal(loc=0, scale=SCALE),
+        "sigma": rng.normal(loc=0.9, scale=SCALE),
     }
     calibrate_kwargs = [
         dict(method="mle"),
