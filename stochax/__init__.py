@@ -8,27 +8,24 @@ stochastic processes
 
 Examples:
 
-    .. code-block:: python
+    >>> from stochax import ArithmeticBrownianMotion
+    >>> abm = ArithmeticBrownianMotion(mu=0, sigma=0.5)
+    >>> paths = abm.simulate(
+    >>>     initial_value=0.5,
+    >>>     n_steps=52,
+    >>>     delta=1/52,
+    >>>     n_simulations=100
+    >>> )
 
-        from stochax import ArithmeticBrownianMotion
-        abm = ArithmeticBrownianMotion(mu=0, sigma=0.5)
-        paths = abm.simulate(
-            initial_value=0.5,
-            n_steps=52,
-            delta=1/52,
-            n_simulations=100
-        )
 
-    .. code-block:: python
-
-        import pandas as pd
-        from stochax import GeometricBrownianMotion
-
-        data = pd.read_csv('path/to/data.csv')
-        gbm = GeometricBrownianMotion()
-        res = gbm.calibrate(data)
-
-        print(res.get_summary())
+    >>> import pandas as pd
+    >>> from stochax import GeometricBrownianMotion
+    >>>
+    >>> data = pd.read_csv('path/to/data.csv')
+    >>> gbm = GeometricBrownianMotion()
+    >>> res = gbm.calibrate(data)
+    >>>
+    >>> print(res.get_summary())
 
 """
 

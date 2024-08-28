@@ -16,6 +16,8 @@ nav:
       - mean_reverting:
           - OrnsteinUhlenbeck: 'api/mean_reverting/ornstein_uhlenbeck.md'
           - CoxIngersollRoss: 'api/mean_reverting/cox_ingersoll_ross.md'
+      - calibration_results:
+          - CalibrationResult: 'api/calibration_results/calibration_result.md'
 
   - About:
       - 'License': '../../LICENSE'
