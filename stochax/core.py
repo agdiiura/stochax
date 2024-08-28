@@ -100,10 +100,12 @@ class ParameterBound(object):
         """
         Initialize the class
 
-        :param parameter: The name of the parameter.
-        :param att_type: The expected data type of the parameter
-        :param lower: The lower bound value for the parameter
-        :param upper: The upper bound value for the parameter
+        Args:
+            parameter: The name of the parameter.
+            att_type: The expected data type of the parameter
+            lower: The lower bound value for the parameter
+            upper: The upper bound value for the parameter
+
         """
         self.parameter = parameter
         if att_type is float:
