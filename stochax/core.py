@@ -375,9 +375,10 @@ class ABCStochasticProcess(abc.ABC):
 
         Returns:
             A DataFrame containing simulated paths of the stochastic process.
-            Each row represents time step, and each column represents a separate simulation path.
-            The first row corresponds to the initial value, and subsequent rows correspond to subsequent observations.
-            The DataFrame has dimensions (n_steps + 1) x n_simulations
+                Each row represents time step, and each column represents a separate simulation path.
+                The first row corresponds to the initial value, and subsequent rows correspond
+                to subsequent observations.
+                The DataFrame has shape `(n_steps + 1, n_simulations)`
 
         """
         self._assert_finite_parameters()
@@ -409,11 +410,11 @@ class ABCStochasticProcess(abc.ABC):
         and sampling interval, using the parameters stored as attributes within the object.
 
         Args:
-        observations: A DataFrame containing observations of the stochastic process. The column
-            represents a path or realization of the process, and each row represents a separate time step.
-            The DataFrame should have dimensions (n_observations, ), where n_observations is the number of
-            observations per path.
-        delta: The sampling interval between consecutive observations
+            observations: A DataFrame containing observations of the stochastic process. The column
+                represents a path or realization of the process, and each row represents a separate time step.
+                The DataFrame should have dimensions `(n_observations, ),` where `n_observations` is the number of
+                observations per path.
+            delta: The sampling interval between consecutive observations
 
         Returns:
             The value of the log-likelihood function computed for the given observations
@@ -674,8 +675,9 @@ class ABCStochasticProcess(abc.ABC):
 
         Returns:
             An object that stores the results of the calibration procedure, including the calibrated
-            parameters, observations used for calibration, calibration method, number of bootstrap resamples, number of
-            parallel jobs, and bootstrap results.
+                parameters, observations used for calibration, calibration method,
+                number of bootstrap resamples, number of
+                parallel jobs, and bootstrap results.
 
 
         """

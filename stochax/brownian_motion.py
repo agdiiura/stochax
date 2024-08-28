@@ -28,29 +28,27 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
     The stochastic equation is:
 
-    .. math::
-
+    ```math
         dS_t = \mu * dt + \sigma * dB_t
+    ```
 
-    where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
+    where `B_t` is the Brownian motion and `S_t` is the process at time `t`.
 
-    Examples:
+    Example:
 
-    .. code-block:: python
+        >>> abm = ArithmeticBrownianMotion(mu=0., sigma=0.5)
+        >>> paths = abm.simulate(
+        >>>     initial_value=0.5,
+        >>>     n_steps=52,
+        >>>     delta=1/52,
+        >>>     n_simulations=100
+        >>> )
 
-        abm = ArithmeticBrownianMotion(mu=0., sigma=0.5)
-        paths = abm.simulate(
-            initial_value=0.5,
-            n_steps=52,
-            delta=1/52,
-            n_simulations=100
-        )
+    Example:
 
-    .. code-block:: python
-
-        data = pd.read_csv('path/to/data.csv')
-        abm = ArithmeticBrownianMotion()
-        res = abm.calibrate(data)
+        >>> data = pd.read_csv('path/to/data.csv')
+        >>> abm = ArithmeticBrownianMotion()
+        >>> res = abm.calibrate(data)
 
     """
 
@@ -68,9 +66,11 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         """
         Initialize the class
 
-        :param mu: drift coefficient
-        :param sigma: diffusion coefficient
-        :param rng: The random state for generating simulations and bootstrap samples
+        Args:
+            mu: drift coefficient
+            sigma: diffusion coefficient
+            rng: The random state for generating simulations and bootstrap samples
+
         """
 
         super().__init__(rng=rng)
@@ -93,14 +93,17 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
         The time interval of simulation is [0,T] where T = n_steps*delta
 
-        :param initial_value: starting point
-        :param n_steps: sample size -> initial value + n observations
-        :param delta: sampling interval
-        :param n_simulations: number of paths to be simulated
-        :param method: simulation method
+        Args:
+            initial_value: starting point
+            n_steps: sample size -> initial value + n observations
+            delta: sampling interval
+            n_simulations: number of paths to be simulated
+            method: simulation method
 
-        :return n_simulations simulations of length n_steps+1
-            (included the initial value)
+        Returns:
+            n_simulations simulations of length n_steps+1
+                (included the initial value)
+
         """
 
         # use standard normal
@@ -123,11 +126,14 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
         • PAPER
 
-        :param observations: columns indicates the different
-            paths and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            observations: columns indicates the different
+                paths and rows indicates the observations
+            delta: sampling interval
 
-        :return: the log-likelihood function
+        Returns:
+            the log-likelihood function
+
         """
         prices = observations.to_numpy()
 
@@ -148,11 +154,14 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
             "A stochastic processes toolkit for risk management."
             Available at SSRN 1109160 (2007).
 
-        :param observations: columns indicates the different paths
-            and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            observations: columns indicates the different paths
+                and rows indicates the observations
+            delta: sampling interval
 
-        :return: the mle parameters
+        Returns:
+            the mle parameters
+
         """
 
         prices = observations.to_numpy().ravel()
@@ -173,29 +182,28 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
     The stochastic equation is:
 
-    .. math::
+    ```math
 
         dS_t = S_t(\mu * dt + \sigma * dB_t)
+    ```
 
-    where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
+    where `B_t` is the Brownian motion and `S_t` is the process at time `t`.
 
-    Examples:
+    Example:
 
-    .. code-block:: python
+        >>> gbm = GeometricBrownianMotion(mu=0., sigma=0.5)
+        >>> paths = gbm.simulate(
+        >>>     initial_value=0.5,
+        >>>     n_steps=52,
+        >>>     delta=1/52,
+        >>>     n_simulations=100
+        >>> )
 
-        gbm = GeometricBrownianMotion(mu=0., sigma=0.5)
-        paths = gbm.simulate(
-            initial_value=0.5,
-            n_steps=52,
-            delta=1/52,
-            n_simulations=100
-        )
+    Example:
 
-    .. code-block:: python
-
-        data = pd.read_csv('path/to/data.csv')
-        gbm = GeometricBrownianMotion()
-        res = gbm.calibrate(data)
+        >>> data = pd.read_csv('path/to/data.csv')
+        >>> gbm = GeometricBrownianMotion()
+        >>> res = gbm.calibrate(data)
 
     """
 
@@ -213,9 +221,11 @@ class GeometricBrownianMotion(ABCStochasticProcess):
         """
         Initialize the class
 
-        :param mu: drift coefficient
-        :param sigma: diffusion coefficient
-        :param rng: The random state for generating simulations and bootstrap samples
+        Args:
+            mu: drift coefficient
+            sigma: diffusion coefficient
+            rng: The random state for generating simulations and bootstrap samples
+
         """
 
         super().__init__(rng=rng)
@@ -238,14 +248,17 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
         The time interval of simulation is [0,T] where T = n_steps*delta
 
-        :param initial_value: starting point
-        :param n_steps: sample size -> initial value + n observations
-        :param delta: sampling interval
-        :param n_simulations: number of paths to be simulated
-        :param method: simulation method
+        Args:
+            initial_value: starting point
+            n_steps: sample size -> initial value + n observations
+            delta: sampling interval
+            n_simulations: number of paths to be simulated
+            method: simulation method
 
-        :return: n_simulations simulations of length n_steps+1
-            (included the initial value)
+        Returns:
+            n_simulations simulations of length n_steps+1
+                (included the initial value)
+
         """
 
         # use standard normal
@@ -269,11 +282,14 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
         • PAPER
 
-        :param observations: columns indicates the different
-            paths and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            observations: columns indicates the different
+                paths and rows indicates the observations
+            delta: sampling interval
 
-        :return: the log-likelihood function
+        Returns:
+            the log-likelihood function
+
         """
         log_prices = observations.apply(np.log).to_numpy()
 
@@ -295,11 +311,14 @@ class GeometricBrownianMotion(ABCStochasticProcess):
             "A stochastic processes toolkit for risk management."
             Available at SSRN 1109160 (2007).
 
-        :param observations: columns indicates the different paths
-            and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            observations: columns indicates the different paths
+                and rows indicates the observations
+            delta: sampling interval
 
-        :return: the mle parameters
+        Returns:
+            the mle parameters
+
         """
 
         prices = np.log(observations.to_numpy().ravel())
