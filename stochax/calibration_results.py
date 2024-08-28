@@ -68,22 +68,21 @@ class CalibrationResult(object):
         """
         Initialize the class
 
-        :param process: a stochastic process instance
-        :param observations: observations data
-        :param delta: sampling interval
-        :param method: choices are 'mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
-        :param n_boot_resamples: number bootstrap resamples
-        :param n_jobs: number of parallel jobs
-        :param seed: bootstrap random state
-        :param bootstrap_results: a DataFrame contained the results of bootstrap procedure
+        Args:
+            process: a stochastic process instance
+            observations: observations data
+            delta: sampling interval
+            method: choices are 'mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
+            n_boot_resamples: number bootstrap resamples
+            n_jobs: number of parallel jobs
+            seed: bootstrap random state
+            bootstrap_results: a DataFrame contained the results of bootstrap procedure
 
-        Example:
+        Examples:
 
-        .. code-block:: python
-
-            ...
-            res = process.calibrate(data)
-            print(res.get_summary())
+            >>> ...
+            >>> res = process.calibrate(data)
+            >>> print(res.get_summary())
 
         """
 
@@ -114,7 +113,9 @@ class CalibrationResult(object):
         """
         Display parameters and relative errors
 
-        :return fig: (go.Figure) obtained values
+        Returns:
+            obtained values
+
         """
         if "bootstrap" not in self._method:
             raise NotImplementedError("method not implemented with estimation `mle`")
@@ -159,7 +160,9 @@ class CalibrationResult(object):
         """
         Display the correlation obtained in the bootstrap procedure
 
-        :return: the figure object
+        Returns:
+            a dynamic graph object
+
         """
         if "bootstrap" not in self._method:
             raise NotImplementedError("method not implemented with estimation `mle`")
@@ -182,7 +185,9 @@ class CalibrationResult(object):
             * BIC: Bayesian information criterion
             * HQC: Hannan–Quinn information criterion
 
-        :return: Information about the fit.
+        Returns:
+            Information about the fit.
+
         """
 
         summary = dict()

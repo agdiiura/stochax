@@ -1,0 +1,34 @@
+site_name: "stochax"
+
+theme:
+  name: readthedocs
+use_directory_urls: false
+nav:
+  - Home: 'index.md'
+  - API:
+      - Index: 'api/index.md'
+      - core:
+        - objective: 'api/core/objective.md'
+        - ParameterBound: 'api/core/parameter_bound.md'
+        - Bounds: 'api/core/bounds.md'
+      - brownian_motion:
+        - ArithmeticBrownianMotion: 'api/brownian_motion/arithmetic_brownian_motion.md'
+        - GeometricBrownianMotion: 'api/brownian_motion/geometric_brownian_motion.md'
+      - mean_reverting:
+          - OrnsteinUhlenbeck: 'api/mean_reverting/ornstein_uhlenbeck.md'
+          - CoxIngersollRoss: 'api/mean_reverting/cox_ingersoll_ross.md'
+      - calibration_results:
+          - CalibrationResult: 'api/calibration_results/calibration_result.md'
+
+  - About:
+      - 'License': '../../LICENSE'
+
+plugins:
+  - search
+  - mkdocstrings:
+     handlers:
+       python:
+         paths: [../stochax]
+       options:
+         inherited_members: true
+         show_source : false
