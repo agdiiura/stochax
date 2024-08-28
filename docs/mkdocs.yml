@@ -8,6 +8,7 @@ nav:
   - API:
       - Index: 'api/index.md'
       - core:
+        - objective: 'api/core/objective.md'
         - ParameterBound: 'api/core/parameter_bound.md'
         - Bounds: 'api/core/bounds.md'
       - brownian_motion:
