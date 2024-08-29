@@ -3,6 +3,10 @@
 A python package for the simulation and calibration of
 stochastic processes.
 
+## Minimal examples
+
+### Simulation
+
 It can be used to simulate a stochastic
 process:
 
@@ -17,6 +21,8 @@ paths = abm.simulate(
     n_simulations=100
 )
 ```
+
+### Model fit
 
 It is also possible to use the package to
 fit data:

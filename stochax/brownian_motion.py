@@ -15,7 +15,7 @@ import pandas as pd
 from scipy.stats import norm
 from numpy.random import Generator
 
-from .core import Bounds, ParameterBound, ABCStochasticProcess
+from .core import Bound, Bounds, ABCStochasticProcess
 
 __all__ = ["ArithmeticBrownianMotion", "GeometricBrownianMotion"]
 
@@ -53,8 +53,8 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
     """
 
     _bounds = Bounds(
-        ParameterBound("mu", float, -np.inf, np.inf),
-        ParameterBound("sigma", float, 0.0, np.inf),
+        Bound("mu", float, -np.inf, np.inf),
+        Bound("sigma", float, 0.0, np.inf),
     )
 
     def __init__(
@@ -208,8 +208,8 @@ class GeometricBrownianMotion(ABCStochasticProcess):
     """
 
     _bounds = Bounds(
-        ParameterBound("mu", float, -np.inf, np.inf),
-        ParameterBound("sigma", float, 0.0, np.inf),
+        Bound("mu", float, -np.inf, np.inf),
+        Bound("sigma", float, 0.0, np.inf),
     )
 
     def __init__(

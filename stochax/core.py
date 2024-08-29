@@ -44,7 +44,7 @@ from .calibration_results import CalibrationResult
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ParameterBound", "Bounds"]
+__all__ = ["Bound", "Bounds"]
 
 
 def objective(
@@ -64,7 +64,7 @@ def objective(
         delta: The sampling frequency or time step used in the observations
 
     Returns:
-        the log-likelihood value
+        the negative log-likelihood value
 
     Notes:
         - If the provided parameters lead to an invalid computation (e.g., due to invalid input or model constraints),
@@ -84,7 +84,7 @@ def objective(
         return np.inf
 
 
-class ParameterBound(object):
+class Bound(object):
     """
     A class to represent the bounds of a parameter.
 
@@ -192,19 +192,19 @@ class ParameterBound(object):
 
 class Bounds(object):
     """
-    A collection of ParameterBound objects representing parameter bounds.
+    A collection of `Bound` objects representing parameter bounds.
 
     This class provides functionality for managing a collection of
-    ParameterBound objects, each defining bounds for a specific parameter. It allows for validation of parameter
+    `Bound` objects, each defining bounds for a specific parameter. It allows for validation of parameter
     values against these bounds and conversion to a format suitable for use with optimization algorithms.
     """
 
-    def __init__(self, *bounds: ParameterBound):
+    def __init__(self, *bounds: Bound):
         """
         Initialize the class
 
         Args:
-            bounds:  A collection of ParameterBound objects representing parameter bounds.
+            bounds:  A collection of `Bound` objects representing parameter bounds.
 
         """
 
@@ -236,9 +236,9 @@ class Bounds(object):
                 raise KeyError(f"`{key}` not in available parameters")
             self._bounds[key](val)
 
-    def __getitem__(self, item: str) -> ParameterBound:
+    def __getitem__(self, item: str) -> Bound:
         """
-        Override the [] operator to return a ParameterBound object for the given item
+        Override the [] operator to return a `Bound` object for the given item
 
         Args:
             item: The key representing the parameter.
@@ -247,16 +247,16 @@ class Bounds(object):
         return self._bounds[item]
 
     def __len__(self) -> int:
-        """Get the number of ParameterBound objects in the Bounds collection"""
+        """Get the number of `Bound` objects in the `Bounds` collection"""
         return len(self._bounds)
 
     def __iter__(self):
-        """Override the `for` loop statement iterator to iterate over the ParameterBound objects"""
+        """Override the `for` loop statement iterator to iterate over the `Bound` objects"""
         return iter(self._bounds)
 
     def to_tuple(self) -> list[tuple]:
         """
-        Transform the `ParameterBound` objects into a list of tuples suitable for
+        Transform the `Bound` objects into a list of tuples suitable for
         use with `scipy.optimize` module
 
         Returns:

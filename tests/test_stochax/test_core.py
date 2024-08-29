@@ -15,7 +15,7 @@ import xmlrunner
 
 from test_stochax.config import xml_test_folder
 
-from stochax.core import Bounds, ParameterBound
+from stochax.core import Bound, Bounds
 
 
 class TestParameterBound(unittest.TestCase):
@@ -25,9 +25,9 @@ class TestParameterBound(unittest.TestCase):
         """Test the call method"""
 
         with self.assertRaises(ValueError):
-            ParameterBound("err", float, 100, -100)
+            Bound("err", float, 100, -100)
 
-        b = ParameterBound("a", float, -1, 1)
+        b = Bound("a", float, -1, 1)
 
         with self.assertRaises(TypeError):
             b("100")
@@ -43,8 +43,8 @@ class TestParameterBound(unittest.TestCase):
     def test_eq(self):
         """Test the __eq__ method"""
 
-        a = ParameterBound("a", float, -1, 7)
-        b = ParameterBound("a", float, -1, 7)
+        a = Bound("a", float, -1, 7)
+        b = Bound("a", float, -1, 7)
 
         self.assertEqual(a, b)
 
@@ -53,8 +53,8 @@ class TestParameterBound(unittest.TestCase):
     def test_ne(self):
         """Test the __ne__ method"""
 
-        a = ParameterBound("a", float, -1, 7)
-        b = ParameterBound("a", float, -1, 100)
+        a = Bound("a", float, -1, 7)
+        b = Bound("a", float, -1, 100)
 
         self.assertNotEqual(a, b)
 
@@ -66,9 +66,9 @@ class TestBounds(unittest.TestCase):
         """Test the call method"""
 
         with self.assertRaises(ValueError):
-            Bounds(ParameterBound("a", float, -1, 1), ParameterBound("a", float, 0, 1))
+            Bounds(Bound("a", float, -1, 1), Bound("a", float, 0, 1))
 
-        b = Bounds(ParameterBound("a", float, -1, 1), ParameterBound("b", float, 0, 1))
+        b = Bounds(Bound("a", float, -1, 1), Bound("b", float, 0, 1))
 
         with self.assertRaises(ValueError):
             b({"a": 100.0, "b": -100.0})
@@ -81,7 +81,7 @@ class TestBounds(unittest.TestCase):
     def test_len(self):
         """Test the __len__ method"""
 
-        vals = [ParameterBound("a", -1, 1), ParameterBound("b", 0, 1)]
+        vals = [Bound("a", -1, 1), Bound("b", 0, 1)]
         b = Bounds(*vals)
 
         self.assertEqual(len(b), len(vals))
@@ -89,16 +89,16 @@ class TestBounds(unittest.TestCase):
     def test_getitem(self):
         """Test the __getitem__ method"""
 
-        vals = [ParameterBound("a", -1, 1), ParameterBound("b", 0, 1)]
+        vals = [Bound("a", -1, 1), Bound("b", 0, 1)]
         b = Bounds(*vals)
 
-        self.assertIsInstance(b["a"], ParameterBound)
-        self.assertIsInstance(b["b"], ParameterBound)
+        self.assertIsInstance(b["a"], Bound)
+        self.assertIsInstance(b["b"], Bound)
 
     def test_iter(self):
         """Test the __iter__ method"""
 
-        vals = [ParameterBound("a", -1, 1), ParameterBound("b", 0, 1)]
+        vals = [Bound("a", -1, 1), Bound("b", 0, 1)]
         b = Bounds(*vals)
 
         for itm in b:
@@ -107,7 +107,7 @@ class TestBounds(unittest.TestCase):
     def test_to_tuple(self):
         """Test the to_tuple method"""
 
-        b = Bounds(ParameterBound("a", float, -1, 1), ParameterBound("b", float, 0, 1))
+        b = Bounds(Bound("a", float, -1, 1), Bound("b", float, 0, 1))
         t = b.to_tuple()
 
         self.assertEqual(t, [(-1, 1), (0, 1)])

@@ -1,6 +1,6 @@
-# ParameterBound
+# Bound
 
-::: stochax.core.ParameterBound
+::: stochax.core.Bound
     options:
       show_source: false
       inherited_members: true

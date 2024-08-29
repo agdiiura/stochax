@@ -16,7 +16,7 @@ import pandas as pd
 from scipy.stats import ncx2, norm, gamma
 from numpy.random import Generator
 
-from .core import Bounds, ParameterBound, ABCStochasticProcess
+from .core import Bound, Bounds, ABCStochasticProcess
 
 __all__ = ["OrnsteinUhlenbeck", "CoxIngersollRoss"]
 
@@ -32,7 +32,7 @@ class ABCMeanReverting(ABCStochasticProcess, abc.ABC):
             n_simulations: number of values to be simulated
 
         Returns:
-            the stationarity distribution
+            the stationary distribution
 
         """
         self._validate_parameters()
@@ -75,9 +75,9 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
     """
 
     _bounds = Bounds(
-        ParameterBound("kappa", float, 0.0, np.inf),
-        ParameterBound("alpha", float),
-        ParameterBound("sigma", float, 0.0, np.inf),
+        Bound("kappa", float, 0.0, np.inf),
+        Bound("alpha", float),
+        Bound("sigma", float, 0.0, np.inf),
     )
 
     def __init__(
@@ -114,7 +114,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             n_simulations: number of values to be simulated
 
         Returns:
-            the stationarity distribution
+            the stationary distribution
 
         """
         rv = norm(loc=self.alpha, scale=self.sigma * np.sqrt(1.0 / (2.0 * self.kappa)))
@@ -248,7 +248,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         # condition on b1 to get positive kappa, condition on b3 to get
         # sigma > 0 (delta is strictly positive)
         if 0.0 < b1 < 1.0 and b3 > 0.0:
-            kappa = -(1.0 / delta) * np.log(b1)
+            kappa = -np.log(b1) / delta
             alpha = b2
             sigma = np.sqrt(2.0 * kappa * b3 / (1.0 - b1**2))
 
@@ -296,9 +296,9 @@ class CoxIngersollRoss(ABCMeanReverting):
     """
 
     _bounds = Bounds(
-        ParameterBound("kappa", float, 0.0, np.inf),
-        ParameterBound("alpha", float),
-        ParameterBound("sigma", float, 0.0, np.inf),
+        Bound("kappa", float, 0.0, np.inf),
+        Bound("alpha", float),
+        Bound("sigma", float, 0.0, np.inf),
     )
 
     def __init__(
@@ -524,7 +524,7 @@ class CoxIngersollRoss(ABCMeanReverting):
         # condition on b1 to get positive kappa, condition on b3 to get
         # sigma > 0 (delta is strictly positive)
         if 0.0 < b1 < 1.0 and b3 > 0.0:
-            kappa = -(delta ** (-1)) * np.log(abs(b1))
+            kappa = -np.log(abs(b1)) / delta
             alpha = b2
             sigma = np.sqrt(2.0 * kappa * b3 / (1.0 - b1**2))
 
