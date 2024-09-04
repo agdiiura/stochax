@@ -117,6 +117,12 @@ class CalibrationResult(object):
         Returns:
             a dynamic graph object
 
+        Examples:
+
+            >>> ...
+            >>> res = process.calibrate(data)
+            >>> res.show_parameters()
+
         """
         if "bootstrap" not in self._method:
             raise NotImplementedError("method not implemented with estimation `mle`")
@@ -164,6 +170,12 @@ class CalibrationResult(object):
         Returns:
             a dynamic graph object
 
+        Examples:
+
+            >>> ...
+            >>> res = process.calibrate(data)
+            >>> res.show_estimated_correlation()
+
         """
         if "bootstrap" not in self._method:
             raise NotImplementedError("method not implemented with estimation `mle`")
@@ -188,6 +200,12 @@ class CalibrationResult(object):
 
         Returns:
             Information about the fit.
+
+        Examples:
+
+            >>> ...
+            >>> res = process.calibrate(data)
+            >>> res.get_summary()
 
         """
 
