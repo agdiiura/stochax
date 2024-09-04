@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class ABCMeanReverting(ABCStochasticProcess, abc.ABC):
     def stationary_distribution(self, n_simulations: int = 1) -> np.ndarray:
         """
-        Generate n_simulations values from the stationary distribution of an OU process
+        Generate n_simulations values from the stationary distribution of the process
 
         Args:
             n_simulations: number of values to be simulated
@@ -50,7 +50,6 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
     The stochastic equation is:
 
     ```math
-
         dS_t = \kappa * ( \alpha - S_t) * dt + \sigma * dB_t
     ```
 
@@ -271,7 +270,6 @@ class CoxIngersollRoss(ABCMeanReverting):
     The stochastic equation is:
 
     ```math
-
         dS_t = \kappa * ( \alpha - S_t) * dt + \sigma \sqrt{S_t} * dB_t
     ```
 
@@ -345,7 +343,7 @@ class CoxIngersollRoss(ABCMeanReverting):
             n_simulations: number of values simulated
 
         Returns:
-            the stationarity distribution
+            the stationary distribution
 
         """
 

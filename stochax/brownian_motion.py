@@ -101,8 +101,7 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
             method: simulation method
 
         Returns:
-            n_simulations simulations of length n_steps+1
-                (included the initial value)
+            n_simulations simulations of length n_steps+1 (included the initial value)
 
         """
 
@@ -183,7 +182,6 @@ class GeometricBrownianMotion(ABCStochasticProcess):
     The stochastic equation is:
 
     ```math
-
         dS_t = S_t(\mu * dt + \sigma * dB_t)
     ```
 
@@ -256,8 +254,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
             method: simulation method
 
         Returns:
-            n_simulations simulations of length n_steps+1
-                (included the initial value)
+            n_simulations simulations of length n_steps+1 (included the initial value)
 
         """
 
