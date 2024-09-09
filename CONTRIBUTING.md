@@ -13,7 +13,7 @@ code quality, see [`tests`](tests) folder.
 
 The style and the quality of the code is managed
 by [`ruff`](https://docs.astral.sh/ruff/). See  [`pyproject.toml`](pyproject.toml) for configuration.
-A plugin for a documentation is also used, the `rst` paradigm for [`Sphinx`](https://www.sphinx-doc.org/en/master/index.html)
+A plugin for a documentation is also used, the `md` paradigm for [`mkdocs`](https://www.mkdocs.org/)
 has been chosen. See [`docs`](docs) folder for documentation-related issues.
 The import rules are managed through [`isort`](https://pycqa.github.io/isort/), see [`pyproject.toml`](pyproject.toml) file, section
 `[tool.isort]`.
