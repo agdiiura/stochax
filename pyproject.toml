@@ -64,10 +64,6 @@ ignore = [
     "D412", # No blank lines allowed between a section header and its content
 ]
 exclude = [
-    "docs/sphinxext/*.py",
-    "docs/build/*.py",
-    "docs/temp/*.py",
-    "docs/source/conf.py",
     ".eggs/*.py",
     "env"
 ]

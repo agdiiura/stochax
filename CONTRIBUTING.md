@@ -30,8 +30,4 @@ on StackOverflow. To update the tool use `pre-commit autoupdate`.
 
 ### Contributors
 
-Authors and contributors have been collected in [`AUTHORS.rst`](AUTHORS.rst) file.
-
-### Dockerization
-A minimal `docker` environment is contained in [`Dockerfile`](Dockerfile).
-The command is `docker build -t stochax .`
+Authors and contributors have been collected in [`AUTHORS.md`](docs/docs/authors.md) file.
