@@ -15,11 +15,12 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
 
-from numpy.random import RandomState
+from numpy.random import Generator
 from sklearn.utils import Bunch
 from plotly.subplots import make_subplots
 
 __all__ = ["CalibrationResult"]
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,28 +63,27 @@ class CalibrationResult(object):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        seed: RandomState | int | None = None,
+        rng: Generator | int | None = None,
         bootstrap_results: pd.DataFrame | None = None,
     ):
         """
         Initialize the class
 
-        :param process: a stochastic process instance
-        :param observations: observations data
-        :param delta: sampling interval
-        :param method: choices are 'mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
-        :param n_boot_resamples: number bootstrap resamples
-        :param n_jobs: number of parallel jobs
-        :param seed: bootstrap random state
-        :param bootstrap_results: a DataFrame contained the results of bootstrap procedure
+        Args:
+            process: a stochastic process instance
+            observations: observations data
+            delta: sampling interval
+            method: choices are 'mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
+            n_boot_resamples: number bootstrap resamples
+            n_jobs: number of parallel jobs
+            rng: bootstrap random state Generator
+            bootstrap_results: a DataFrame contained the results of bootstrap procedure
 
-        Example:
+        Examples:
 
-        .. code-block:: python
-
-            ...
-            res = process.calibrate(data)
-            print(res.get_summary())
+            >>> ...
+            >>> res = process.calibrate(data)
+            >>> print(res.get_summary())
 
         """
 
@@ -97,7 +97,7 @@ class CalibrationResult(object):
         self._method = method
         self._n_boot_resamples = n_boot_resamples
         self._n_jobs = n_jobs
-        self._seed = seed
+        self._rng = rng
         self._bootstrap_results = bootstrap_results
 
         self._msg = f"{self.__class__.__name__}({self._process}, observations.shape={self._observations.shape})"
@@ -114,7 +114,9 @@ class CalibrationResult(object):
         """
         Display parameters and relative errors
 
-        :return fig: (go.Figure) obtained values
+        Returns:
+            a dynamic graph object
+
         """
         if "bootstrap" not in self._method:
             raise NotImplementedError("method not implemented with estimation `mle`")
@@ -159,7 +161,9 @@ class CalibrationResult(object):
         """
         Display the correlation obtained in the bootstrap procedure
 
-        :return: the figure object
+        Returns:
+            a dynamic graph object
+
         """
         if "bootstrap" not in self._method:
             raise NotImplementedError("method not implemented with estimation `mle`")
@@ -182,7 +186,9 @@ class CalibrationResult(object):
             * BIC: Bayesian information criterion
             * HQC: Hannan–Quinn information criterion
 
-        :return: Information about the fit.
+        Returns:
+            Information about the fit.
+
         """
 
         summary = dict()

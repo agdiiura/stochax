@@ -16,7 +16,7 @@ import pandas as pd
 from scipy.stats import ncx2, norm, gamma
 from numpy.random import Generator
 
-from .core import Bounds, ParameterBound, ABCStochasticProcess
+from .core import Bound, Bounds, ABCStochasticProcess
 
 __all__ = ["OrnsteinUhlenbeck", "CoxIngersollRoss"]
 
@@ -26,10 +26,13 @@ logger = logging.getLogger(__name__)
 class ABCMeanReverting(ABCStochasticProcess, abc.ABC):
     def stationary_distribution(self, n_simulations: int = 1) -> np.ndarray:
         """
-        Generate n_simulations values from the stationary distribution of an OU process
+        Generate n_simulations values from the stationary distribution of the process
 
-        :params n_simulations: number of values to be simulated
-        :return: the stationarity distribution
+        Args:
+            n_simulations: number of values to be simulated
+
+        Returns:
+            the stationary distribution
 
         """
         self._validate_parameters()
@@ -46,36 +49,34 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
 
     The stochastic equation is:
 
-    .. math::
-
+    ```math
         dS_t = \kappa * ( \alpha - S_t) * dt + \sigma * dB_t
+    ```
 
-    where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
+    where `B_t` is the Brownian motion and `S_t` is the process at time `t`.
 
-    Examples:
+    Example:
 
-    .. code-block:: python
+        >>> ou = OrnsteinUhlenbeck(kappa=1., theta=0., sigma=0.5)
+        >>> paths = ou.simulate(
+        >>>     initial_value=0.5,
+        >>>     n_steps=52,
+        >>>     delta=1/52,
+        >>>     n_simulations=100
+        >>> )
 
-        ou = OrnsteinUhlenbeck(kappa=1., theta=0., sigma=0.5)
-        paths = ou.simulate(
-            initial_value=0.5,
-            n_steps=52,
-            delta=1/52,
-            n_simulations=100
-        )
+    Example:
 
-    .. code-block:: python
-
-        data = pd.read_csv('path/to/data.csv')
-        ou = OrnsteinUhlenbeck()
-        res = ou.calibrate(data)
+        >>> data = pd.read_csv('path/to/data.csv')
+        >>> ou = OrnsteinUhlenbeck()
+        >>> res = ou.calibrate(data)
 
     """
 
     _bounds = Bounds(
-        ParameterBound("kappa", float, 0.0, np.inf),
-        ParameterBound("alpha", float),
-        ParameterBound("sigma", float, 0.0, np.inf),
+        Bound("kappa", float, 0.0, np.inf),
+        Bound("alpha", float),
+        Bound("sigma", float, 0.0, np.inf),
     )
 
     def __init__(
@@ -88,10 +89,12 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         """
         Initialize the class
 
-        :param kappa: mean reversion rate
-        :param alpha: long term mean
-        :param sigma: volatility coefficient
-        :param rng: The random state for generating simulations and bootstrap samples
+        Args:
+            kappa: mean reversion rate
+            alpha: long term mean
+            sigma: volatility coefficient
+            rng: The random state for generating simulations and bootstrap samples
+
         """
 
         super().__init__(rng=rng)
@@ -106,8 +109,12 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         """
         Generate n_simulations values from the stationary distribution of an OU process
 
-        :params n_simulations: number of values to be simulated
-        :return: the stationarity distribution
+        Args:
+            n_simulations: number of values to be simulated
+
+        Returns:
+            the stationary distribution
+
         """
         rv = norm(loc=self.alpha, scale=self.sigma * np.sqrt(1.0 / (2.0 * self.kappa)))
         rv.random_state = self._rng
@@ -126,14 +133,16 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
 
         The time interval of simulation is [0,T] where T = n_steps*delta
 
-        :param initial_value: starting point
-        :param n_steps: sample size -> initial value + n observations
-        :param delta: sampling interval
-        :param n_simulations: number of paths to be simulated
-        :param method: simulation method
+        Args:
+            initial_value: starting point
+            n_steps: sample size
+            delta: sampling interval
+            n_simulations: number of paths to be simulated
+            method: simulation method
 
-        :return simulation: n_simulations simulations of length n_steps+1
-            (included the initial value)
+        Returns:
+             simulations of length n_steps+1, (included the initial value)
+
         """
 
         # each column will be a simulated path
@@ -171,9 +180,13 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             Data with Application to Intraday Pairs Trading Strategy."
             arXiv preprint arXiv:1811.09312 (2018).
 
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
-        :return value: maximum of a log-likelihood function
+        Args:
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
+
+        Returns:
+             maximum of a log-likelihood function
+
         """
         prices = observations.to_numpy().ravel()
 
@@ -197,10 +210,13 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
             "Parameter estimation and bias correction for diffusion processes."
             Journal of Econometrics 149.1 (2009): 65-81.
 
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
 
-        :return: parameters: mle parameters
+        Returns:
+            mle parameters
+
         """
 
         n = len(observations) - 1
@@ -231,7 +247,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         # condition on b1 to get positive kappa, condition on b3 to get
         # sigma > 0 (delta is strictly positive)
         if 0.0 < b1 < 1.0 and b3 > 0.0:
-            kappa = -(1.0 / delta) * np.log(b1)
+            kappa = -np.log(b1) / delta
             alpha = b2
             sigma = np.sqrt(2.0 * kappa * b3 / (1.0 - b1**2))
 
@@ -253,36 +269,34 @@ class CoxIngersollRoss(ABCMeanReverting):
 
     The stochastic equation is:
 
-    .. math::
-
+    ```math
         dS_t = \kappa * ( \alpha - S_t) * dt + \sigma \sqrt{S_t} * dB_t
+    ```
 
-    where :math:`B_t` is the Brownian motion and :math:`S_t` is the process at time :math:`t`.
+    where `B_t` is the Brownian motion and `S_t` is the process at time :`t`.
 
-    Examples:
+    Example:
 
-    .. code-block:: python
+        >>> cir = CoxIngersollRoss(kappa=1., theta=0., sigma=0.5)
+        >>> paths = cir.simulate(
+        >>>     initial_value=0.5,
+        >>>     n_steps=52,
+        >>>     delta=1/52,
+        >>>     n_simulations=100
+        >>> )
 
-        cir = CoxIngersollRoss(kappa=1., theta=0., sigma=0.5)
-        paths = cir.simulate(
-            initial_value=0.5,
-            n_steps=52,
-            delta=1/52,
-            n_simulations=100
-        )
+    Example:
 
-    .. code-block:: python
-
-        data = pd.read_csv('path/to/data.csv')
-        cir = CoxIngersollRoss()
-        res = cir.calibrate(data)
+        >>> data = pd.read_csv('path/to/data.csv')
+        >>> cir = CoxIngersollRoss()
+        >>> res = cir.calibrate(data)
 
     """
 
     _bounds = Bounds(
-        ParameterBound("kappa", float, 0.0, np.inf),
-        ParameterBound("alpha", float),
-        ParameterBound("sigma", float, 0.0, np.inf),
+        Bound("kappa", float, 0.0, np.inf),
+        Bound("alpha", float),
+        Bound("sigma", float, 0.0, np.inf),
     )
 
     def __init__(
@@ -295,10 +309,12 @@ class CoxIngersollRoss(ABCMeanReverting):
         """
         Initialize the class
 
-        :param kappa: mean reversion rate
-        :param alpha: long term mean
-        :param sigma: volatility coefficient
-        :param rng: The random state for generating simulations and bootstrap samples
+        Args:
+            kappa: mean reversion rate
+            alpha: long term mean
+            sigma: volatility coefficient
+            rng: The random state for generating simulations and bootstrap samples
+
         """
 
         super().__init__(rng=rng)
@@ -323,8 +339,12 @@ class CoxIngersollRoss(ABCMeanReverting):
         """
         Generate n_simulations values from the stationary distribution of a CIR process
 
-        :params n_simulations: number of values simulated
-        :return: the stationarity distribution
+        Args:
+            n_simulations: number of values simulated
+
+        Returns:
+            the stationary distribution
+
         """
 
         # shape(must be >0), location, scale(must be >0)
@@ -350,14 +370,16 @@ class CoxIngersollRoss(ABCMeanReverting):
 
         The time interval of simulation is [0,T] where T =n_steps*delta
 
-        :param initial_value: starting point
-        :param n_steps: sample size -> initial value + n observations
-        :param delta: sampling interval
-        :param n_simulations: number of paths simulated
-        :param method: simulation method
+        Args:
+            initial_value: starting point
+            n_steps: sample size
+            delta: sampling interval
+            n_simulations: number of paths simulated
+            method: simulation method
 
-        :return: n_simulations simulations of
-            length n_steps + 1 (included the initial value)
+        Returns:
+            simulations of length n_steps + 1 (included the initial value)
+
         """
 
         if method not in ["exact", "euler"]:
@@ -426,9 +448,13 @@ class CoxIngersollRoss(ABCMeanReverting):
             with continuous sampling: Computational aspects and simulation."
             arXiv preprint arXiv:2103.15678 (2021).
 
-        :param observations: columns indicates the different paths and rows indicates the observations
-        :param delta: sampling interval
-        :return: the maximum of a pseudo-log-likelihood function
+        Args:
+            observations: columns indicates the different paths and rows indicates the observations
+            delta: sampling interval
+
+        Returns:
+            the maximum of a pseudo-log-likelihood function
+
         """
 
         if (observations.to_numpy() < 0).any():
@@ -454,10 +480,13 @@ class CoxIngersollRoss(ABCMeanReverting):
         """
         Compute the explicit expression for pseudo-maximum likelihood estimators proposed by Nowman(1997)
 
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
 
-        :return: pseudo-mle parameters
+        Returns:
+            pseudo-mle parameters
+
         """
 
         n = len(observations) - 1
@@ -493,7 +522,7 @@ class CoxIngersollRoss(ABCMeanReverting):
         # condition on b1 to get positive kappa, condition on b3 to get
         # sigma > 0 (delta is strictly positive)
         if 0.0 < b1 < 1.0 and b3 > 0.0:
-            kappa = -(delta ** (-1)) * np.log(abs(b1))
+            kappa = -np.log(abs(b1)) / delta
             alpha = b2
             sigma = np.sqrt(2.0 * kappa * b3 / (1.0 - b1**2))
 

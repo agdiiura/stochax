@@ -44,11 +44,11 @@ from .calibration_results import CalibrationResult
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ParameterBound", "Bounds"]
+__all__ = ["Bound", "Bounds"]
 
 
 def objective(
-    params,
+    params: list,
     process: Any | None = None,
     observations: pd.DataFrame | None = None,
     delta: float = 1.0,
@@ -57,19 +57,21 @@ def objective(
     Calculate the objective function using a wrapper for a given
     stochastic process
 
-    :param params: The input values representing parameters for the stochastic process.
-    :param process: An instance of a stochastic process object
-    :param observations: The observation data used for calculating the log-likelihood
-    :param delta: The sampling frequency or time step used in the observations
+    Args:
+        params: The input values representing parameters for the stochastic process.
+        process: An instance of a stochastic process object
+        observations: The observation data used for calculating the log-likelihood
+        delta: The sampling frequency or time step used in the observations
 
-    :return: the log-likelihood value
+    Returns:
+        the negative log-likelihood value
 
-    .. note::
-
+    Notes:
         - If the provided parameters lead to an invalid computation (e.g., due to invalid input or model constraints),
             the function returns positive infinity (np.inf).
         - The log-likelihood value returned is negated to align with optimization conventions,
             where the objective is typically minimized.
+
     """
     try:
         obj = process(*params)
@@ -82,7 +84,7 @@ def objective(
         return np.inf
 
 
-class ParameterBound(object):
+class Bound(object):
     """
     A class to represent the bounds of a parameter.
 
@@ -100,10 +102,12 @@ class ParameterBound(object):
         """
         Initialize the class
 
-        :param parameter: The name of the parameter.
-        :param att_type: The expected data type of the parameter
-        :param lower: The lower bound value for the parameter
-        :param upper: The upper bound value for the parameter
+        Args:
+            parameter: The name of the parameter.
+            att_type: The expected data type of the parameter
+            lower: The lower bound value for the parameter
+            upper: The upper bound value for the parameter
+
         """
         self.parameter = parameter
         if att_type is float:
@@ -124,7 +128,9 @@ class ParameterBound(object):
         """
         Execute the validation of the provided value against the bounds
 
-        :param value: The value to be validated
+        Args:
+            value: The value to be validated
+
         """
 
         if value is not None:
@@ -150,12 +156,16 @@ class ParameterBound(object):
         """Override the REPL output to return a string representation of the class"""
         return self._msg
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         """
         Override the == operator to check for equality between objects
 
-        :param other: The object to be tested for equality
-        :return: True if the objects are equal, False otherwise
+        Args:
+            other: The object to be tested for equality
+
+        Returns:
+            True if the objects are equal, False otherwise
+
         """
         if not isinstance(other, self.__class__):
             return False
@@ -166,30 +176,36 @@ class ParameterBound(object):
             and self.upper == other.upper
         )
 
-    def __ne__(self, other) -> bool:
+    def __ne__(self, other: Any) -> bool:
         """
         Override the != operator to check for inequality between objects
 
-        :param other: The object to be tested for equality
-        :return: True if the objects are not equal, False otherwise
+        Args:
+            other: The object to be tested for equality
+
+        Returns:
+            True if the objects are not equal, False otherwise
+
         """
         return not self.__eq__(other)
 
 
 class Bounds(object):
     """
-    A collection of ParameterBound objects representing parameter bounds.
+    A collection of `Bound` objects representing parameter bounds.
 
     This class provides functionality for managing a collection of
-    ParameterBound objects, each defining bounds for a specific parameter. It allows for validation of parameter
+    `Bound` objects, each defining bounds for a specific parameter. It allows for validation of parameter
     values against these bounds and conversion to a format suitable for use with optimization algorithms.
     """
 
-    def __init__(self, *bounds: ParameterBound):
+    def __init__(self, *bounds: Bound):
         """
         Initialize the class
 
-        :param bounds:  A collection of ParameterBound objects representing parameter bounds.
+        Args:
+            bounds:  A collection of `Bound` objects representing parameter bounds.
+
         """
 
         if len(set([b.parameter for b in bounds])) != len(bounds):
@@ -210,7 +226,9 @@ class Bounds(object):
         """
         Execute the call and validate the bounds for the given parameters
 
-        :param parameters: A dictionary representing the process parameters
+        Args:
+            parameters: A dictionary representing the process parameters
+
         """
 
         for key, val in parameters.items():
@@ -218,29 +236,33 @@ class Bounds(object):
                 raise KeyError(f"`{key}` not in available parameters")
             self._bounds[key](val)
 
-    def __getitem__(self, item: str) -> ParameterBound:
+    def __getitem__(self, item: str) -> Bound:
         """
-        Override the [] operator to return a ParameterBound object for the given item
+        Override the [] operator to return a `Bound` object for the given item
 
-        :param item: The key representing the parameter.
+        Args:
+            item: The key representing the parameter.
+
         """
         return self._bounds[item]
 
     def __len__(self) -> int:
-        """Get the number of ParameterBound objects in the Bounds collection"""
+        """Get the number of `Bound` objects in the `Bounds` collection"""
         return len(self._bounds)
 
     def __iter__(self):
-        """Override the `for` loop statement iterator to iterate over the ParameterBound objects"""
+        """Override the `for` loop statement iterator to iterate over the `Bound` objects"""
         return iter(self._bounds)
 
     def to_tuple(self) -> list[tuple]:
         """
-        Transform the `ParameterBound` objects into a list of tuples suitable for
+        Transform the `Bound` objects into a list of tuples suitable for
         use with `scipy.optimize` module
 
-        :return: A list of tuples representing lower and upper bounds for parameters
-            [(lower, upper), (lower, upper), ..., (lower, upper)]
+        Returns:
+            A list of tuples representing lower and upper bounds for parameters
+                `[(lower, upper), (lower, upper), ..., (lower, upper)]`
+
         """
 
         return [(b.lower, b.upper) for b in self._bounds.values()]
@@ -255,12 +277,13 @@ class ABCStochasticProcess(abc.ABC):
     Subclasses must implement specific methods for simulation, likelihood calculation, and parameter estimation based
     on the characteristics of the stochastic process.
 
-    .. note::
+    Notes:
         Subclasses must implement the _simulate, _log_likelihood, and _calibrate methods.
         - The _simulate method should simulate paths of the stochastic process.
         - The _log_likelihood method should calculate the log-likelihood function.
         - The _calibrate method should calibrate the parameters based on observations.
         - Users should instantiate concrete subclasses of ABCStochasticProcess rather than ABCStochasticProcess itself.
+
     """
 
     _min_optimal_length = 25
@@ -270,7 +293,9 @@ class ABCStochasticProcess(abc.ABC):
         """
         Initialize the class
 
-        :param rng: The random state for generating simulations and bootstrap samples
+        Args:
+            rng: The random state for generating simulations and bootstrap samples
+
         """
 
         if rng is None:
@@ -339,17 +364,22 @@ class ABCStochasticProcess(abc.ABC):
 
         This method generates simulated paths of a generic stochastic process based on the provided parameters.
 
-        :param initial_value: The initial value or starting point for the simulation, if required also the
-            initial volatility
-        :param n_steps: The number of steps or observations to simulate, excluding the initial value
-        :param delta: The sampling interval between consecutive observations
-        :param n_simulations: The number of paths to simulate
-        :param method: The number of paths to simulate
+        Args:
+            initial_value: The initial value or starting point for the simulation, if required also the
+                initial volatility
+            n_steps: The number of steps or observations to simulate, excluding the initial value
+            delta: The sampling interval between consecutive observations
+            n_simulations: The number of paths to simulate
+            method: The number of paths to simulate
 
-        :return: A DataFrame containing simulated paths of the stochastic process.
-            Each row represents time step, and each column represents a separate simulation path.
-            The first row corresponds to the initial value, and subsequent rows correspond to subsequent observations.
-            The DataFrame has dimensions (n_steps + 1) x n_simulations
+
+        Returns:
+            A DataFrame containing simulated paths of the stochastic process.
+                Each row represents time step, and each column represents a separate simulation path.
+                The first row corresponds to the initial value, and subsequent rows correspond
+                to subsequent observations.
+                The DataFrame has shape `(n_steps + 1, n_simulations)`
+
         """
         self._assert_finite_parameters()
 
@@ -379,13 +409,16 @@ class ABCStochasticProcess(abc.ABC):
         This method computes the log-likelihood function of the stochastic process based on the provided observations
         and sampling interval, using the parameters stored as attributes within the object.
 
-        :param observations: A DataFrame containing observations of the stochastic process. The column
-            represents a path or realization of the process, and each row represents a separate time step.
-            The DataFrame should have dimensions (n_observations, ), where n_observations is the number of
-            observations per path.
-        :param delta: The sampling interval between consecutive observations
+        Args:
+            observations: A DataFrame containing observations of the stochastic process. The column
+                represents a path or realization of the process, and each row represents a separate time step.
+                The DataFrame should have dimensions `(n_observations, ),` where `n_observations` is the number of
+                observations per path.
+            delta: The sampling interval between consecutive observations
 
-        :return: The value of the log-likelihood function computed for the given observations
+        Returns:
+            The value of the log-likelihood function computed for the given observations
+
         """
         self._assert_finite_parameters()
         observations = self._validate_observations(observations=observations)
@@ -413,8 +446,10 @@ class ABCStochasticProcess(abc.ABC):
             A Review and Comparative Study."
             Mathematics 9.8 (2021): 859.
 
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
+
         """
         bounds = self.bounds.to_tuple()
 
@@ -456,9 +491,11 @@ class ABCStochasticProcess(abc.ABC):
         """
         Set coefficients to mle estimators. Coefficients_std remains None
 
-        :param f: estimate function
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
+        Args:
+            f: estimate function
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
+
         """
 
         estimated_params = f(observations, delta)
@@ -498,11 +535,13 @@ class ABCStochasticProcess(abc.ABC):
         Set coefficients to non-parametric bootstrap coefficients.
         Set coefficients_std to non-parametric bootstrap coefficients std.
 
-        :param f: estimate function
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
-        :param n_boot_resamples: number bootstrap resamples
-        :param n_jobs: number of parallel jobs
+        Args:
+            f: estimate function
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
+            n_boot_resamples: number bootstrap resamples
+            n_jobs: number of parallel jobs
+
         """
 
         optimal_length = max(
@@ -541,11 +580,13 @@ class ABCStochasticProcess(abc.ABC):
         Set coefficients to parametric bootstrap coefficients.
         Set coefficients_std to parametric bootstrap coefficients std.
 
-        :param f: estimate function
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
-        :param n_boot_resamples: number bootstrap resamples
-        :param n_jobs: number of parallel jobs
+        Args:
+            f: estimate function
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
+            n_boot_resamples: number bootstrap resamples
+            n_jobs: number of parallel jobs
+
         """
         estimated_params = f(observations, delta)
 
@@ -620,20 +661,23 @@ class ABCStochasticProcess(abc.ABC):
              The Annals of Statistics (1994): 995-1012.
 
 
-        :param observations: A DataFrame containing observations of the stochastic process. The column
-            represents a path or realization of the process, and each row represents a separate time step.
-            The DataFrame should have dimensions (n_observations, ), where n_observations is the number of
-            observations per path.
-        :param delta: The sampling interval between consecutive observations
-        :param method: The calibration method to use. Choices are 'mle' for Maximum Likelihood Estimation,
-            'parametric_bootstrap' for parametric bootstrap, and 'non_parametric_bootstrap'
-            for non-parametric bootstrap
-        :param n_boot_resamples: The number of bootstrap resamples to perform during calibration
-        :param n_jobs: The number of parallel jobs to use during calibration
+        Args:
+            observations: A DataFrame containing observations of the stochastic process. The column
+                represents a path or realization of the process, and each row represents a separate time step.
+                The DataFrame should have dimensions (n_observations, ), where n_observations is the number of
+                observations per path.
+            delta: The sampling interval between consecutive observations
+            method: The calibration method to use. Choices are 'mle' for Maximum Likelihood Estimation,
+                'parametric_bootstrap' for parametric bootstrap, and 'non_parametric_bootstrap'
+                for non-parametric bootstrap
+            n_boot_resamples: The number of bootstrap resamples to perform during calibration
+            n_jobs: The number of parallel jobs to use during calibration
 
-        :return: An object that stores the results of the calibration procedure, including the calibrated
-            parameters, observations used for calibration, calibration method, number of bootstrap resamples, number of
-            parallel jobs, and bootstrap results.
+        Returns:
+            An object that stores the results of the calibration procedure, including the calibrated
+                parameters, observations used for calibration, calibration method,
+                number of bootstrap resamples, number of
+                parallel jobs, and bootstrap results.
 
 
         """
@@ -685,23 +729,25 @@ class ABCStochasticProcess(abc.ABC):
         If method is 'parametric_bootstrap' function does a parametric bootstrap procedure for bias correction.
         If method is 'non_parametric_bootstrap' function does a non-parametric bootstrap procedure for bias correction
 
-        .. warning::
+        Warnings:
 
             A remark: f_mle MUST return parameters in the same
             order as `__init__` method with the following signature:
 
-            .. code-block:: python
+        Examples:
 
-                def f_mle(observations: pd.DataFrame,
-                    delta: float = 1.,
-                    **kwargs
-                ): -> dict
+                >>> def f_mle(observations: pd.DataFrame,
+                >>>     delta: float = 1.,
+                >>>     **kwargs
+                >>> ): -> dict
 
-        :param observations: column indicates the path and rows indicates the observations
-        :param delta: sampling interval
-        :param method: choices are 'mle', 'pseudo_mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
-        :param n_boot_resamples: number bootstrap resamples
-        :param n_jobs: number of parallel jobs
+        Args:
+            observations: column indicates the path and rows indicates the observations
+            delta: sampling interval
+            method: choices are 'mle', 'pseudo_mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
+            n_boot_resamples: number bootstrap resamples
+            n_jobs: number of parallel jobs
+
         """
 
         if hasattr(self, "_maximum_likelihood_estimation"):
@@ -755,8 +801,12 @@ class ABCStochasticProcess(abc.ABC):
         """
         Validate the observations input
 
-        :param observations: input data
-        :return: output data
+        Args:
+            observations: input data
+
+        Returns:
+            output data
+
         """
         if isinstance(observations, (np.ndarray, list, dict)):
             observations = pd.DataFrame(observations)
