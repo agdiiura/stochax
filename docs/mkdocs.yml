@@ -22,6 +22,7 @@ nav:
 
   - About:
       - 'License': '../../LICENSE'
+      - 'Authors': 'authors.md'
 
 plugins:
   - search

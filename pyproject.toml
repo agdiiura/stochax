@@ -64,10 +64,6 @@ ignore = [
     "D412", # No blank lines allowed between a section header and its content
 ]
 exclude = [
-    "docs/sphinxext/*.py",
-    "docs/build/*.py",
-    "docs/temp/*.py",
-    "docs/source/conf.py",
     ".eggs/*.py",
     "env"
 ]
@@ -90,5 +86,5 @@ sections = ["FUTURE","STDLIB","THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
 
 [tool.codespell]
 quiet-level = 0
-ignore-words-list = "sur,manuel"
+ignore-words-list = "sur,manuel,assertIn"
 skip = "*.ipynb,*.html,pyproject.toml"

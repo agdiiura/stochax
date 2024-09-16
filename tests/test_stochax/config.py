@@ -31,12 +31,16 @@ def simulate_univariate_process(
     Create an array of simulated prices from Student-T returns with high ddf
     to be gaussian-like.
 
-    :param size: length of prices
-    :param baseline: starting value of the price
-    :param std: standard deviation scale
-    :param min_value: minimum allowed price value
-    :param rng: numpy Generator
-    :return: prices array
+    Args:
+        size: length of prices
+        baseline: starting value of the price
+        std: standard deviation scale
+        min_value: minimum allowed price value
+        rng: numpy Generator
+
+    Returns:
+        prices array
+
     """
 
     if rng is None:
@@ -82,7 +86,9 @@ class TestConfig(unittest.TestCase):
             min_value = rng.standard_normal()
             baseline = rng.exponential(scale=100)
 
-            prices = simulate_univariate_process(size, std=std, min_value=min_value, baseline=baseline)
+            prices = simulate_univariate_process(
+                size, std=std, min_value=min_value, baseline=baseline
+            )
             self.assertIsInstance(prices, np.ndarray)
             self.assertEqual(prices.shape, (size,))
             self.assertTrue((prices >= min_value).all())

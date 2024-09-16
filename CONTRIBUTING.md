@@ -13,7 +13,7 @@ code quality, see [`tests`](tests) folder.
 
 The style and the quality of the code is managed
 by [`ruff`](https://docs.astral.sh/ruff/). See  [`pyproject.toml`](pyproject.toml) for configuration.
-A plugin for a documentation is also used, the `rst` paradigm for [`Sphinx`](https://www.sphinx-doc.org/en/master/index.html)
+A plugin for a documentation is also used, the `md` paradigm for [`mkdocs`](https://www.mkdocs.org/)
 has been chosen. See [`docs`](docs) folder for documentation-related issues.
 The import rules are managed through [`isort`](https://pycqa.github.io/isort/), see [`pyproject.toml`](pyproject.toml) file, section
 `[tool.isort]`.
@@ -30,8 +30,4 @@ on StackOverflow. To update the tool use `pre-commit autoupdate`.
 
 ### Contributors
 
-Authors and contributors have been collected in [`AUTHORS.rst`](AUTHORS.rst) file.
-
-### Dockerization
-A minimal `docker` environment is contained in [`Dockerfile`](Dockerfile).
-The command is `docker build -t stochax .`
+Authors and contributors have been collected in [`AUTHORS.md`](docs/docs/authors.md) file.
