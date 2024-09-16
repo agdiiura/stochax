@@ -11,7 +11,6 @@ It can be used to simulate a stochastic
 process:
 
 ```python
-
 from stochax import ArithmeticBrownianMotion
 abm = ArithmeticBrownianMotion(mu=0, sigma=0.5)
 paths = abm.simulate(

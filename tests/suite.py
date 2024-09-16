@@ -6,19 +6,19 @@ suite.py
 A script to execute and manage tests defined in the 'test_stochax' package.
 
 Usage:
-Run the script in a shell using the following commands:
-- To run a single test file:
-  $ python suite.py -t <path/to/test.py>
-- To run all test files in a folder:
-  $ python suite.py -t <path/to/folder/>
+    Run the script in a shell using the following commands:
+    - To run a single test file:
+      $ python suite.py -t <path/to/test.py>
+    - To run all test files in a folder:
+      $ python suite.py -t <path/to/folder/>
 
 Dependencies:
-- pandas: Required for timestamp handling and summary creation.
-- xmlrunner: Required for generating XML test reports.
-- colorama: Used for colored console output.
-- test_stochax.config: Import required configurations from the 'test_stochax' package.
+    - pandas: Required for timestamp handling and summary creation.
+    - xmlrunner: Required for generating XML test reports.
+    - colorama: Used for colored console output.
+    - test_stochax.config: Import required configurations from the 'test_stochax' package.
 
-.. note::
+Notes:
     Ensure that the required dependencies are installed before running this script.
 
 """
@@ -53,15 +53,18 @@ class ErrorUnittest(unittest.TestCase):
         """Raise an error"""
         self.assertTrue(
             False,
-            msg=f"Error in loading `{self._module}`. " f"{self._exception.__class__.__name__}: {self._exception}",
+            msg=f"Error in loading `{self._module}`. "
+            f"{self._exception.__class__.__name__}: {self._exception}",
         )
 
 
-def build_error_suite(module: Path, exception: Exception):
+def build_error_suite(module: Path, exception: Exception) -> unittest.TestSuite:
     """Build a TestSuite object"""
 
     suite = unittest.TestSuite()
-    suite.addTest(ErrorUnittest("test_raise_error", module=str(module), exception=exception))
+    suite.addTest(
+        ErrorUnittest("test_raise_error", module=str(module), exception=exception)
+    )
 
     return suite
 
@@ -79,11 +82,15 @@ def run_test(file: Path):
     """
     Execute the test
 
-    :param file: (Path) test file path
+    Args:
+        file: test file path
+
     """
     runner = xmlrunner.XMLTestRunner(output=xml_test_folder)
 
-    print(f"\n{Style.DIM + Back.LIGHTBLUE_EX}{pd.Timestamp.now()}{Style.RESET_ALL}\nReading `{file}` module")
+    print(
+        f"\n{Style.DIM + Back.LIGHTBLUE_EX}{pd.Timestamp.now()}{Style.RESET_ALL}\nReading `{file}` module"
+    )
     module = importlib.import_module(str(file).replace("/", ".").replace(".py", ""))
 
     build_suite = getattr(module, "build_suite")
@@ -107,7 +114,13 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run the test")
 
-    parser.add_argument("--test", "-t", type=Path, default="test_stochax/", help="Set the single test or a subpackage")
+    parser.add_argument(
+        "--test",
+        "-t",
+        type=Path,
+        default="test_stochax/",
+        help="Set the single test or a subpackage",
+    )
 
     args = parser.parse_args()
 
