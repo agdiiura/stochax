@@ -4,7 +4,7 @@ Stochastic processes in python
 
 
 
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit) [![Documentation Status](https://readthedocs.org/projects/stochax/badge/?version=latest)](https://stochax.readthedocs.io/en/latest/?badge=latest)
 
 The file `pyproject.toml` contains the packages needed for the installation.
 The code requires `python3.12+`.

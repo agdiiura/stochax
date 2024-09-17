@@ -711,7 +711,7 @@ class ABCStochasticProcess(abc.ABC):
             method=method,
             n_boot_resamples=n_boot_resamples,
             n_jobs=n_jobs,
-            seed=self._rng,
+            rng=self._rng,
             bootstrap_results=self._bootstrap_results,
         )
 
