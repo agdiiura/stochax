@@ -2,6 +2,11 @@ site_name: "stochax"
 
 theme:
   name: readthedocs
+  theme:
+    palette:
+      scheme: slate
+      primary: teal
+
 use_directory_urls: false
 nav:
   - Home: 'index.md'
