@@ -38,7 +38,7 @@ from .brownian_motion import *
 from .calibration_results import *
 
 
-def _read_version():
+def _read_version() -> str:
     """Read version from metadata or pyproject.toml"""
 
     try:

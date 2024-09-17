@@ -11,6 +11,7 @@ echo "### Execute tests for stochax package ###"
 echo "#########################################"
 
 
+$COMMAND $FOLDER/test_base.py
 $COMMAND $FOLDER/test_calibration_results.py
 $COMMAND $FOLDER/test_core.py
 $COMMAND $FOLDER/test_stochastic_processes.py
