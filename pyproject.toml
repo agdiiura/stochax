@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stochax"
-version = "0.0.1"
+version = "0.0.2"
 readme = "README.md"
 authors = [
     {name = "agdiiura", email="andreadiiura@gmail.com"}
@@ -25,6 +25,11 @@ dependencies = [
     "scipy>=1.12.0",
     "arch>=6.3.0"
 ]
+
+[project.urls]
+Homepage = "https://github.com/agdiiura/stochax"
+Documentation = "https://stochax.readthedocs.io/en/stable/index.html"
+Repository = "https://github.com/agdiiura/stochax.git"
 
 [project.optional-dependencies]
 build = [
