@@ -1,5 +1,5 @@
 # The addition of the pyproject.toml activates the so-called "build-isolation" mode of pip,
-# where each build environment is created ad-hoc and it's isolated from the active virtual
+# where each build environment is created ad-hoc, and it's isolated from the active virtual
 # environment where the package is being installed. This may create unwanted behaviours,
 # as the rebuilding of the build dependencies even when they have been already installed previously.
 # To prevent this behavior, either remove the pyproject.toml or launch pip the option --no-build-isolation.
