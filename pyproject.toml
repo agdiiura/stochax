@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stochax"
-version = "0.0.2"
+version = "0.0.3"
 readme = "README.md"
 authors = [
     {name = "agdiiura", email="andreadiiura@gmail.com"}
@@ -33,7 +33,7 @@ Repository = "https://github.com/agdiiura/stochax.git"
 
 [project.optional-dependencies]
 build = [
-    "ruff>=0.5.0",
+    "ruff>=0.6.1",
     "colorama>=0.4.6",
     "coverage>=7.0",
     "isort>=5.12.0",
