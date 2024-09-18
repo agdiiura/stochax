@@ -23,6 +23,7 @@ Notes:
 
 """
 
+import sys
 import argparse
 import unittest
 import warnings
@@ -77,6 +78,9 @@ def make_summary(test_results: dict):
         if len(r.errors) > 0 or len(r.failures) > 0:
             print(f"{Style.DIM + Back.LIGHTRED_EX}Error with `{t}`{Style.RESET_ALL}")
 
+    if any(len(r.errors) > 0 or len(r.failures) > 0 for r in test_results.values()):
+        sys.exit(1)
+
 
 def run_test(file: Path):
     """
@@ -91,7 +95,11 @@ def run_test(file: Path):
     print(
         f"\n{Style.DIM + Back.LIGHTBLUE_EX}{pd.Timestamp.now()}{Style.RESET_ALL}\nReading `{file}` module"
     )
-    module = importlib.import_module(str(file).replace("/", ".").replace(".py", ""))
+    if sys.platform in ["win32"]:
+        target = str(file).replace("\\", ".").replace(".py", "")
+    else:
+        target = str(file).replace("/", ".").replace(".py", "")
+    module = importlib.import_module(target)
 
     build_suite = getattr(module, "build_suite")
     try:
