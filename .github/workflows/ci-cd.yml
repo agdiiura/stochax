@@ -28,19 +28,38 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
+
     - name: Install dependencies and source code
       run: |
         python -m pip install --upgrade pip
-        pip install .[build,docs]
+        pip install -e .[build,docs]
+
     - name: Lint with ruff
       run: |
         # stop the build if there are Python syntax errors or undefined names
         mkdir -p tests/test-reports
-        # flake8 stochax --format junit-xml >tests/test-reports/TEST-test_flake8-"$(date +"%Y%m%d%H%M%S")".xml
         ruff check stochax
+
     - name: Test library
       run: |
         cd tests
         bash battery.sh
+      env:
+          COVERAGE_FILE: ".coverage${{ matrix.python-version }}"
+          # Alternatively you can run coverage with the --parallel flag or add
+          # `parallel = True` in the coverage config file.
+          # If using pytest-cov, you can also add the `--cov-append` flag
+          # directly or through PYTEST_ADD_OPTS.
+
+    - name: Store coverage file
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.python-version }}
+        path: tests/.coverage${{ matrix.python-version }}
+        # By default, hidden files/folders (i.e. starting with .) are ignored.
+        # You may prefer (for security reason) not setting this and instead
+        # set COVERAGE_FILE above to not start with a `.`
+        include-hidden-files: true
