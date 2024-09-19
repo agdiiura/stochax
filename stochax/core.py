@@ -29,7 +29,6 @@ import logging
 from copy import deepcopy
 from typing import Any, Callable
 from inspect import signature
-from numbers import Number
 
 import numpy as np
 import pandas as pd
@@ -124,7 +123,7 @@ class Bound(object):
             f"[{self.lower}, {self.upper}])"
         )
 
-    def __call__(self, value: Number | None = None):
+    def __call__(self, value: int | float | None = None) -> None:
         """
         Execute the validation of the provided value against the bounds
 
@@ -222,12 +221,14 @@ class Bounds(object):
         """Override the REPL output to return a string representation of the Bounds object"""
         return self._msg
 
-    def __call__(self, parameters: dict):
+    def __call__(self, parameters: dict) -> None:
         """
         Execute the call and validate the bounds for the given parameters
 
         Args:
             parameters: A dictionary representing the process parameters
+                As an example for `GeometricBrownianMotion` class the input
+                is `{'mu': 0.5, 'sigma': 1.0}`
 
         """
 
@@ -321,11 +322,11 @@ class ABCStochasticProcess(abc.ABC):
         """Return a flag to indicate whereas parameters are not null"""
         return all(v is not None for v in self.parameters.values())
 
-    def _validate_parameters(self):
+    def _validate_parameters(self) -> None:
         """Validate the process parameters"""
         self._bounds(parameters=self.parameters)
 
-    def _assert_finite_parameters(self):
+    def _assert_finite_parameters(self) -> None:
         """Raise an error if any parameter is None, Inf or null"""
 
         for key, val in self.parameters.items():
@@ -825,7 +826,13 @@ class ABCStochasticProcess(abc.ABC):
         return observations
 
     def copy(self):
-        """Return a deep-copy of the object"""
+        """
+        Create a deep-copy of the object
+
+        Returns:
+            A deep-copy of the stochastic processes class
+
+        """
         return deepcopy(self)
 
 
