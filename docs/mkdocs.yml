@@ -14,8 +14,6 @@ nav:
       - Index: 'api/index.md'
       - core:
         - objective: 'api/core/objective.md'
-        - Bound: 'api/core/bound.md'
-        - Bounds: 'api/core/bounds.md'
       - brownian_motion:
         - ArithmeticBrownianMotion: 'api/brownian_motion/arithmetic_brownian_motion.md'
         - GeometricBrownianMotion: 'api/brownian_motion/geometric_brownian_motion.md'

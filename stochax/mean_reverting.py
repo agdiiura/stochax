@@ -13,10 +13,11 @@ import logging
 import numpy as np
 import pandas as pd
 
+from pydantic import BaseModel, PositiveFloat
 from scipy.stats import ncx2, norm, gamma
 from numpy.random import Generator
 
-from .core import Bound, Bounds, ABCStochasticProcess
+from .core import ABCStochasticProcess
 
 __all__ = ["OrnsteinUhlenbeck", "CoxIngersollRoss"]
 
@@ -41,6 +42,12 @@ class ABCMeanReverting(ABCStochasticProcess, abc.ABC):
     @abc.abstractmethod
     def _stationary_distribution(self, n_simulations: int = 1) -> np.ndarray:
         pass
+
+
+class OrnsteinUhlenbeckValidator(BaseModel):
+    kappa: None | PositiveFloat
+    alpha: None | float
+    sigma: None | PositiveFloat
 
 
 class OrnsteinUhlenbeck(ABCMeanReverting):
@@ -73,11 +80,7 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
 
     """
 
-    _bounds = Bounds(
-        Bound("kappa", float, 0.0, np.inf),
-        Bound("alpha", float),
-        Bound("sigma", float, 0.0, np.inf),
-    )
+    _bounds = OrnsteinUhlenbeckValidator
 
     def __init__(
         self,
@@ -263,6 +266,12 @@ class OrnsteinUhlenbeck(ABCMeanReverting):
         }
 
 
+class CoxIngersollRossValidator(BaseModel):
+    kappa: None | PositiveFloat
+    alpha: None | float
+    sigma: None | PositiveFloat
+
+
 class CoxIngersollRoss(ABCMeanReverting):
     r"""
     The CIR (Cox-Ingersoll-Ross) process class:
@@ -293,11 +302,7 @@ class CoxIngersollRoss(ABCMeanReverting):
 
     """
 
-    _bounds = Bounds(
-        Bound("kappa", float, 0.0, np.inf),
-        Bound("alpha", float),
-        Bound("sigma", float, 0.0, np.inf),
-    )
+    _bounds = CoxIngersollRossValidator
 
     def __init__(
         self,
