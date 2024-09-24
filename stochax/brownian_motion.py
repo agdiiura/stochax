@@ -12,14 +12,20 @@ import logging
 import numpy as np
 import pandas as pd
 
+from pydantic import BaseModel, PositiveFloat
 from scipy.stats import norm
 from numpy.random import Generator
 
-from .core import Bound, Bounds, ABCStochasticProcess
+from .core import ABCStochasticProcess
 
 __all__ = ["ArithmeticBrownianMotion", "GeometricBrownianMotion"]
 
 logger = logging.getLogger(__name__)
+
+
+class ArithmeticBrownianMotionValidator(BaseModel):
+    mu: None | float
+    sigma: None | PositiveFloat
 
 
 class ArithmeticBrownianMotion(ABCStochasticProcess):
@@ -52,10 +58,7 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
 
     """
 
-    _bounds = Bounds(
-        Bound("mu", float, -np.inf, np.inf),
-        Bound("sigma", float, 0.0, np.inf),
-    )
+    _bounds = ArithmeticBrownianMotionValidator
 
     def __init__(
         self,
@@ -175,6 +178,11 @@ class ArithmeticBrownianMotion(ABCStochasticProcess):
         }
 
 
+class GeometricBrownianMotionValidator(BaseModel):
+    mu: None | float
+    sigma: None | PositiveFloat
+
+
 class GeometricBrownianMotion(ABCStochasticProcess):
     r"""
     A class for Geometric Brownian Motion
@@ -205,10 +213,7 @@ class GeometricBrownianMotion(ABCStochasticProcess):
 
     """
 
-    _bounds = Bounds(
-        Bound("mu", float, -np.inf, np.inf),
-        Bound("sigma", float, 0.0, np.inf),
-    )
+    _bounds = GeometricBrownianMotionValidator
 
     def __init__(
         self,
