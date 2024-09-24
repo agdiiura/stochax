@@ -24,17 +24,18 @@ Useful resources are:
 """
 
 import abc
+import sys
 import logging
 
 from copy import deepcopy
-from typing import Any, Callable
+from typing import Any, Self, Callable
 from inspect import signature
-from numbers import Number
 
 import numpy as np
 import pandas as pd
 
 from joblib import Parallel, delayed
+from pydantic import BaseModel, ValidationError
 from scipy.stats import truncnorm
 from numpy.random import Generator
 from arch.bootstrap import CircularBlockBootstrap, optimal_block_length
@@ -44,8 +45,6 @@ from .calibration_results import CalibrationResult
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["Bound", "Bounds"]
-
 
 def objective(
     params: list,
@@ -54,8 +53,8 @@ def objective(
     delta: float = 1.0,
 ) -> float:
     """
-    Calculate the objective function using a wrapper for a given
-    stochastic process
+    Calculate the objective (i.e. the negative log-likelihood)
+    function using a wrapper for a given stochastic process
 
     Args:
         params: The input values representing parameters for the stochastic process.
@@ -75,197 +74,13 @@ def objective(
     """
     try:
         obj = process(*params)
-    except ValueError:
+    except (ValueError, ValidationError):
         return np.inf
 
     try:
         return -obj.log_likelihood(observations=observations, delta=delta)
     except ValueError:
         return np.inf
-
-
-class Bound(object):
-    """
-    A class to represent the bounds of a parameter.
-
-    This class encapsulates the lower and upper bounds of a parameter along with its data type.
-    It provides methods for validating values against these bounds.
-    """
-
-    def __init__(
-        self,
-        parameter: str,
-        att_type: Any = float,
-        lower: float = -np.inf,
-        upper: float = np.inf,
-    ):
-        """
-        Initialize the class
-
-        Args:
-            parameter: The name of the parameter.
-            att_type: The expected data type of the parameter
-            lower: The lower bound value for the parameter
-            upper: The upper bound value for the parameter
-
-        """
-        self.parameter = parameter
-        if att_type is float:
-            att_type = (float, int)
-        self.att_type = att_type
-        if lower > upper:
-            raise ValueError(f"lower = {lower} > upper = {upper}")
-        self.lower = lower
-        self.upper = upper
-
-        self._msg = (
-            f"{self.__class__.__name__}"
-            f"({self.parameter} [{self.att_type}], "
-            f"[{self.lower}, {self.upper}])"
-        )
-
-    def __call__(self, value: Number | None = None):
-        """
-        Execute the validation of the provided value against the bounds
-
-        Args:
-            value: The value to be validated
-
-        """
-
-        if value is not None:
-            if not isinstance(value, self.att_type):
-                raise TypeError(f"`{self.parameter}` is type {self.att_type}")
-            if value > self.upper:
-                raise ValueError(
-                    f"`{self.parameter}` greater than upper bound: "
-                    f"{value} > {self.upper}"
-                )
-
-            if value < self.lower:
-                raise ValueError(
-                    f"`{self.parameter}` lower than upper bound: "
-                    f"{value} < {self.lower}"
-                )
-
-    def __str__(self) -> str:
-        """Override the print output to return a string representation of the class"""
-        return self._msg
-
-    def __repr__(self) -> str:
-        """Override the REPL output to return a string representation of the class"""
-        return self._msg
-
-    def __eq__(self, other: Any) -> bool:
-        """
-        Override the == operator to check for equality between objects
-
-        Args:
-            other: The object to be tested for equality
-
-        Returns:
-            True if the objects are equal, False otherwise
-
-        """
-        if not isinstance(other, self.__class__):
-            return False
-        return (
-            self.parameter == other.parameter
-            and self.att_type == other.att_type
-            and self.lower == other.lower
-            and self.upper == other.upper
-        )
-
-    def __ne__(self, other: Any) -> bool:
-        """
-        Override the != operator to check for inequality between objects
-
-        Args:
-            other: The object to be tested for equality
-
-        Returns:
-            True if the objects are not equal, False otherwise
-
-        """
-        return not self.__eq__(other)
-
-
-class Bounds(object):
-    """
-    A collection of `Bound` objects representing parameter bounds.
-
-    This class provides functionality for managing a collection of
-    `Bound` objects, each defining bounds for a specific parameter. It allows for validation of parameter
-    values against these bounds and conversion to a format suitable for use with optimization algorithms.
-    """
-
-    def __init__(self, *bounds: Bound):
-        """
-        Initialize the class
-
-        Args:
-            bounds:  A collection of `Bound` objects representing parameter bounds.
-
-        """
-
-        if len(set([b.parameter for b in bounds])) != len(bounds):
-            raise ValueError("duplicated parameters in `Bound` objects")
-        self._bounds = {b.parameter: b for b in bounds}
-
-        self._msg = f'{self.__class__.__name__}' f'({",".join(self._bounds.keys())})'
-
-    def __str__(self) -> str:
-        """Override the print output to return a string representation of the Bounds object"""
-        return self._msg
-
-    def __repr__(self) -> str:
-        """Override the REPL output to return a string representation of the Bounds object"""
-        return self._msg
-
-    def __call__(self, parameters: dict):
-        """
-        Execute the call and validate the bounds for the given parameters
-
-        Args:
-            parameters: A dictionary representing the process parameters
-
-        """
-
-        for key, val in parameters.items():
-            if key not in self._bounds.keys():
-                raise KeyError(f"`{key}` not in available parameters")
-            self._bounds[key](val)
-
-    def __getitem__(self, item: str) -> Bound:
-        """
-        Override the [] operator to return a `Bound` object for the given item
-
-        Args:
-            item: The key representing the parameter.
-
-        """
-        return self._bounds[item]
-
-    def __len__(self) -> int:
-        """Get the number of `Bound` objects in the `Bounds` collection"""
-        return len(self._bounds)
-
-    def __iter__(self):
-        """Override the `for` loop statement iterator to iterate over the `Bound` objects"""
-        return iter(self._bounds)
-
-    def to_tuple(self) -> list[tuple]:
-        """
-        Transform the `Bound` objects into a list of tuples suitable for
-        use with `scipy.optimize` module
-
-        Returns:
-            A list of tuples representing lower and upper bounds for parameters
-                `[(lower, upper), (lower, upper), ..., (lower, upper)]`
-
-        """
-
-        return [(b.lower, b.upper) for b in self._bounds.values()]
 
 
 class ABCStochasticProcess(abc.ABC):
@@ -312,7 +127,7 @@ class ABCStochasticProcess(abc.ABC):
         return {par: getattr(self, par) for par in parameters if par != "rng"}
 
     @property
-    def bounds(self) -> Bounds:
+    def bounds(self) -> BaseModel:
         """Return the model bounds"""
         return self._bounds
 
@@ -321,11 +136,11 @@ class ABCStochasticProcess(abc.ABC):
         """Return a flag to indicate whereas parameters are not null"""
         return all(v is not None for v in self.parameters.values())
 
-    def _validate_parameters(self):
-        """Validate the process parameters"""
-        self._bounds(parameters=self.parameters)
+    def _validate_parameters(self) -> None:
+        """Validate the process parameters using pydantic"""
+        self._bounds(**self.parameters)
 
-    def _assert_finite_parameters(self):
+    def _assert_finite_parameters(self) -> None:
         """Raise an error if any parameter is None, Inf or null"""
 
         for key, val in self.parameters.items():
@@ -435,7 +250,7 @@ class ABCStochasticProcess(abc.ABC):
         pass
 
     def _maximize_log_likelihood(
-        self, observations: pd.DataFrame, delta: float = 1.0
+        self, observations: pd.DataFrame, delta: float = 1.0, n_trials: int = 5
     ) -> dict:
         """
         Estimate the process parameter using a numerical procedure.
@@ -449,16 +264,16 @@ class ABCStochasticProcess(abc.ABC):
         Args:
             observations: column indicates the path and rows indicates the observations
             delta: sampling interval
+            n_trials: number of trials for different starting points
 
         """
-        bounds = self.bounds.to_tuple()
-
-        n_trials = 10
+        m = sys.maxsize / 2
+        bounds = [(-m, m) for _ in range(len(self.parameters))]
 
         best_result = None
         best_ll = np.inf
         rv_list = list()
-        for itm in self.bounds.to_tuple():
+        for itm in bounds:
             rv = truncnorm(a=itm[0], b=itm[1])
             rv.random_state = self._rng
             rv_list.append(rv)
@@ -824,8 +639,14 @@ class ABCStochasticProcess(abc.ABC):
 
         return observations
 
-    def copy(self):
-        """Return a deep-copy of the object"""
+    def copy(self) -> Self:
+        """
+        Create a deep-copy of the object
+
+        Returns:
+            A deep-copy of the stochastic processes class
+
+        """
         return deepcopy(self)
 
 

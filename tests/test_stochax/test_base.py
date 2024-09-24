@@ -21,11 +21,11 @@ class TestImport(unittest.TestCase):
     def test_import(self):
         """Test the import using dynamical import"""
 
-        quirtylog = importlib.import_module("stochax")
-        self.assertIsInstance(quirtylog.__version__, str)
+        stochax = importlib.import_module("stochax")
+        self.assertIsInstance(stochax.__version__, str)
 
 
-def build_suite():
+def build_suite() -> unittest.TestSuite:
     """Build the TestSuite"""
     suite = unittest.TestSuite()
 
