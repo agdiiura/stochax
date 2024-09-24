@@ -28,6 +28,8 @@ class MockProcess(object):
 
     def __init__(self, x: None | float = None):
         """Initialize the class"""
+        if x < 0:
+            raise ValueError
         self.x = x
 
     def log_likelihood(self, observations: pd.DataFrame, delta: float = 1) -> float:
@@ -46,15 +48,19 @@ class TestObjective(unittest.TestCase):
         n_runs = 10
 
         for _ in range(n_runs):
+            p = rng.standard_normal()
             value = objective(
-                params=[rng.standard_normal()],
+                params=[p],
                 process=process,
                 observations=None,
-                delta=0.5,
+                delta=rng.uniform(low=0.1, high=0.9),
             )
 
             self.assertIsInstance(value, float)
-            self.assertTrue(np.isfinite(value))
+            self.assertTrue(pd.notnull(value))
+
+            if p > 0:
+                self.assertTrue(np.isfinite(value))
 
 
 def build_suite() -> unittest.TestSuite:

@@ -24,7 +24,7 @@ nav:
           - CalibrationResult: 'api/calibration_results/calibration_result.md'
 
   - About:
-      - 'License': '../../LICENSE'
+      - 'License': 'license.md'
       - 'Authors': 'authors.md'
 
 plugins:

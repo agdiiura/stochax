@@ -28,7 +28,7 @@ import sys
 import logging
 
 from copy import deepcopy
-from typing import Any, Callable
+from typing import Any, Self, Callable
 from inspect import signature
 
 import numpy as np
@@ -639,7 +639,7 @@ class ABCStochasticProcess(abc.ABC):
 
         return observations
 
-    def copy(self):
+    def copy(self) -> Self:
         """
         Create a deep-copy of the object
 
