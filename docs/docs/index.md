@@ -50,3 +50,6 @@ import stochax as sx
 
 sx.__version__
 ```
+
+Optional dependencies are `docs` for documentation and
+`build` for development.
