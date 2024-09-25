@@ -11,122 +11,63 @@ $ python test_core.py
 
 import unittest
 
+import numpy as np
+import pandas as pd
 import xmlrunner
+import numpy.random
 
 from test_stochax.config import xml_test_folder
 
-from stochax.core import Bound, Bounds
+from stochax.core import objective
+
+rng = numpy.random.default_rng()
 
 
-class TestParameterBound(unittest.TestCase):
-    """Test the Bound class"""
+class MockProcess(object):
+    """A class to represent a Stochastic-process"""
 
-    def test_call(self):
-        """Test the call method"""
+    def __init__(self, x: None | float = None):
+        """Initialize the class"""
+        if x < 0:
+            raise ValueError
+        self.x = x
 
-        with self.assertRaises(ValueError):
-            Bound("err", float, 100, -100)
-
-        b = Bound("a", float, -1, 1)
-
-        with self.assertRaises(TypeError):
-            b("100")
-
-        with self.assertRaises(ValueError):
-            b(100.0)
-
-        with self.assertRaises(ValueError):
-            b(-100.0)
-
-        self.assertIsNone(b(None))
-
-    def test_eq(self):
-        """Test the __eq__ method"""
-
-        a = Bound("a", float, -1, 7)
-        b = Bound("a", float, -1, 7)
-
-        self.assertEqual(a, b)
-
-        self.assertFalse(a == "string")
-
-    def test_ne(self):
-        """Test the __ne__ method"""
-
-        a = Bound("a", float, -1, 7)
-        b = Bound("a", float, -1, 100)
-
-        self.assertNotEqual(a, b)
+    def log_likelihood(self, observations: pd.DataFrame, delta: float = 1) -> float:
+        """Return the log-likelihood value"""
+        return (self.x**2 - 1) / delta
 
 
-class TestBounds(unittest.TestCase):
-    """Test the Bounds class"""
+class TestObjective(unittest.TestCase):
+    """A class for objective function test"""
 
     def test_call(self):
-        """Test the call method"""
+        """Test the function call"""
 
-        with self.assertRaises(ValueError):
-            Bounds(Bound("a", float, -1, 1), Bound("a", float, 0, 1))
+        process = MockProcess
 
-        b = Bounds(Bound("a", float, -1, 1), Bound("b", float, 0, 1))
+        n_runs = 10
 
-        with self.assertRaises(ValueError):
-            b({"a": 100.0, "b": -100.0})
+        for _ in range(n_runs):
+            p = rng.standard_normal()
+            value = objective(
+                params=[p],
+                process=process,
+                observations=None,
+                delta=rng.uniform(low=0.1, high=0.9),
+            )
 
-        with self.assertRaises(KeyError):
-            b({"c": 1.0})
+            self.assertIsInstance(value, float)
+            self.assertTrue(pd.notnull(value))
 
-        self.assertIsNone(b({"a": 0.0, "b": 0.1}))
-
-    def test_len(self):
-        """Test the __len__ method"""
-
-        vals = [Bound("a", -1, 1), Bound("b", 0, 1)]
-        b = Bounds(*vals)
-
-        self.assertEqual(len(b), len(vals))
-
-    def test_getitem(self):
-        """Test the __getitem__ method"""
-
-        vals = [Bound("a", -1, 1), Bound("b", 0, 1)]
-        b = Bounds(*vals)
-
-        self.assertIsInstance(b["a"], Bound)
-        self.assertIsInstance(b["b"], Bound)
-
-    def test_iter(self):
-        """Test the __iter__ method"""
-
-        vals = [Bound("a", -1, 1), Bound("b", 0, 1)]
-        b = Bounds(*vals)
-
-        for itm in b:
-            self.assertIsInstance(itm, str)
-
-    def test_to_tuple(self):
-        """Test the to_tuple method"""
-
-        b = Bounds(Bound("a", float, -1, 1), Bound("b", float, 0, 1))
-        t = b.to_tuple()
-
-        self.assertEqual(t, [(-1, 1), (0, 1)])
+            if p > 0:
+                self.assertTrue(np.isfinite(value))
 
 
-def build_suite():
+def build_suite() -> unittest.TestSuite:
     """Build the TestSuite"""
     suite = unittest.TestSuite()
 
-    suite.addTest(TestParameterBound("test_call"))
-    suite.addTest(TestParameterBound("test_eq"))
-    suite.addTest(TestParameterBound("test_ne"))
-
-    suite.addTest(TestBounds("test_call"))
-    suite.addTest(TestBounds("test_len"))
-    suite.addTest(TestBounds("test_getitem"))
-    suite.addTest(TestBounds("test_iter"))
-    suite.addTest(TestBounds("test_to_tuple"))
-
+    suite.addTest(TestObjective("test_call"))
     return suite
 
 

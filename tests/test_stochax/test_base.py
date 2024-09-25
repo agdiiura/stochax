@@ -25,7 +25,7 @@ class TestImport(unittest.TestCase):
         self.assertIsInstance(stochax.__version__, str)
 
 
-def build_suite():
+def build_suite() -> unittest.TestSuite:
     """Build the TestSuite"""
     suite = unittest.TestSuite()
 

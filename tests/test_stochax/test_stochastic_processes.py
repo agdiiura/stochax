@@ -16,6 +16,8 @@ import numpy as np
 import pandas as pd
 import xmlrunner
 
+from tqdm import tqdm
+from pydantic import ValidationError
 from test_stochax.config import xml_test_folder, simulate_univariate_process
 
 from stochax.mean_reverting import CoxIngersollRoss, OrnsteinUhlenbeck
@@ -131,7 +133,7 @@ class TestStochasticProcess(unittest.TestCase):
                 n_steps=self.n_steps,
             )
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValidationError):
             kw[key] = np.nan
             process = self.process(**kw)
             process.simulate(
@@ -284,7 +286,7 @@ class TestStochasticProcess(unittest.TestCase):
         for method in methods:
             calibration_results = list()
 
-            for col in observations.columns:
+            for col in tqdm(observations.columns):
                 res = process.calibrate(
                     observations=observations[col],
                     delta=self.delta,
@@ -385,7 +387,7 @@ class TestGeometricBrownianMotion(TestStochasticProcess):
     simulation_condition = ["positive"]
 
 
-def build_suite(model: str = "all"):
+def build_suite(model: str = "all") -> unittest.TestSuite:
     """Build the TestSuite"""
     suite = unittest.TestSuite()
 

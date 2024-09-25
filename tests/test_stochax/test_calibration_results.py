@@ -123,7 +123,7 @@ class TestCalibrationResult(unittest.TestCase):
         self.assertEqual(expected, set(s.keys()))
 
 
-def build_suite():
+def build_suite() -> unittest.TestSuite:
     """Build the TestSuite"""
     suite = unittest.TestSuite()
 

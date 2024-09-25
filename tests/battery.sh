@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipeline
+set -eu
 
 FOLDER=test_stochax
 
@@ -11,7 +11,7 @@ echo "### Execute tests for stochax package ###"
 echo "#########################################"
 
 
-coverage run suite --test $FOLDER
+coverage run suite.py --test $FOLDER
 coverage report -m
 
 echo ""
