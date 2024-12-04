@@ -327,6 +327,7 @@ class TestOrnsteinUhlenbeck(TestStochasticProcess):
         dict(method="parametric_bootstrap"),
         dict(method="non_parametric_bootstrap"),
         dict(method="numerical_mle"),
+        dict(method="numerical_mle", starting_value=init_kwargs),
     ]
     simulate_kwargs = [dict()]
     simulation_condition = []
@@ -346,6 +347,7 @@ class TestCoxIngersollRoss(TestStochasticProcess):
         dict(method="parametric_bootstrap"),
         dict(method="non_parametric_bootstrap"),
         dict(method="numerical_mle"),
+        dict(method="numerical_mle", starting_value=init_kwargs),
     ]
     simulate_kwargs = [dict(method="exact"), dict(method="euler")]
     simulation_condition = ["positive"]
@@ -364,6 +366,7 @@ class TestArithmeticBrownianMotion(TestStochasticProcess):
         dict(method="parametric_bootstrap"),
         dict(method="non_parametric_bootstrap"),
         dict(method="numerical_mle"),
+        dict(method="numerical_mle", starting_value=init_kwargs),
     ]
     simulate_kwargs = [dict()]
     simulation_condition = []
@@ -382,6 +385,7 @@ class TestGeometricBrownianMotion(TestStochasticProcess):
         dict(method="parametric_bootstrap"),
         dict(method="non_parametric_bootstrap"),
         dict(method="numerical_mle"),
+        dict(method="numerical_mle", starting_value=init_kwargs),
     ]
     simulate_kwargs = [dict()]
     simulation_condition = ["positive"]

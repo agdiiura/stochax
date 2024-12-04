@@ -52,4 +52,5 @@ sx.__version__
 ```
 
 Optional dependencies are `docs` for documentation and
-`build` for development.
+`build` for development. To install optional
+dependencies `pip install stochax[docs,build]`.

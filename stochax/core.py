@@ -33,6 +33,7 @@ from inspect import signature
 
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from joblib import Parallel, delayed
 from pydantic import BaseModel, ValidationError
@@ -49,7 +50,7 @@ logger = logging.getLogger(__name__)
 def objective(
     params: list,
     process: Any | None = None,
-    observations: pd.DataFrame | None = None,
+    observations: pd.DataFrame | pl.DataFrame | None = None,
     delta: float = 1.0,
 ) -> float:
     """
@@ -250,7 +251,11 @@ class ABCStochasticProcess(abc.ABC):
         pass
 
     def _maximize_log_likelihood(
-        self, observations: pd.DataFrame, delta: float = 1.0, n_trials: int = 5
+        self,
+        observations: pd.DataFrame,
+        delta: float = 1.0,
+        n_trials: int = 5,
+        starting_value: dict | None = None,
     ) -> dict:
         """
         Estimate the process parameter using a numerical procedure.
@@ -265,10 +270,13 @@ class ABCStochasticProcess(abc.ABC):
             observations: column indicates the path and rows indicates the observations
             delta: sampling interval
             n_trials: number of trials for different starting points
+            starting_value: initial point for the numerical estimation
 
         """
         m = sys.maxsize / 2
         bounds = [(-m, m) for _ in range(len(self.parameters))]
+        if starting_value is None:
+            starting_value = {parameter: 0 for parameter in self.parameters.keys()}
 
         best_result = None
         best_ll = np.inf
@@ -279,7 +287,10 @@ class ABCStochasticProcess(abc.ABC):
             rv_list.append(rv)
 
         for _ in range(n_trials):
-            it = (rv.rvs() for rv in rv_list)
+            it = (
+                starting_value[parameter] + rv.rvs()
+                for rv, parameter in zip(rv_list, self.parameters.keys())
+            )
 
             result = minimize(
                 objective,
@@ -302,7 +313,9 @@ class ABCStochasticProcess(abc.ABC):
             for parameter, val in zip(self.parameters.keys(), best_result.x)
         }
 
-    def _compute_mle(self, f: Callable, observations: pd.DataFrame, delta: float = 1.0):
+    def _compute_mle(
+        self, f: Callable, observations: pd.DataFrame, delta: float = 1.0, **kwargs
+    ):
         """
         Set coefficients to mle estimators. Coefficients_std remains None
 
@@ -310,10 +323,11 @@ class ABCStochasticProcess(abc.ABC):
             f: estimate function
             observations: column indicates the path and rows indicates the observations
             delta: sampling interval
+            kwargs: additional parameters used by the function `f`
 
         """
 
-        estimated_params = f(observations, delta)
+        estimated_params = f(observations, delta, **kwargs)
 
         for parameter, val in estimated_params.items():
             if parameter not in self.parameters.keys():
@@ -438,6 +452,8 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
+        n_trials: int = 5,
+        starting_value: dict | None = None,
     ) -> CalibrationResult:
         """
         Calibrate the parameters of the stochastic process using various estimation methods.
@@ -487,6 +503,9 @@ class ABCStochasticProcess(abc.ABC):
                 for non-parametric bootstrap
             n_boot_resamples: The number of bootstrap resamples to perform during calibration
             n_jobs: The number of parallel jobs to use during calibration
+            starting_value: initial value used in the numerical calibration procedue, if not
+                provided a random guess is performed
+            n_trials: number of numerical trials in the numerical mle
 
         Returns:
             An object that stores the results of the calibration procedure, including the calibrated
@@ -515,6 +534,8 @@ class ABCStochasticProcess(abc.ABC):
             method=method,
             n_boot_resamples=n_boot_resamples,
             n_jobs=n_jobs,
+            n_trials=n_trials,
+            starting_value=starting_value,
         )
         # test if parameters are well-defined
         self._validate_parameters()
@@ -537,6 +558,8 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
+        starting_value: list | None = None,
+        n_trials: int = 5,
     ):
         """
         Calibrate the stochastic process and store parameters as attribute
@@ -562,6 +585,9 @@ class ABCStochasticProcess(abc.ABC):
             method: choices are 'mle', 'pseudo_mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
             n_boot_resamples: number bootstrap resamples
             n_jobs: number of parallel jobs
+            starting_value: initial value used in the numerical calibration procedue, if not
+                provided a random guess is performed
+            n_trials: number of numerical trials in the numerical mle
 
         """
 
@@ -587,7 +613,11 @@ class ABCStochasticProcess(abc.ABC):
             self._compute_mle(f=f_mle, observations=observations, delta=delta)
         elif method == "numerical_mle":
             self._compute_mle(
-                f=self._maximize_log_likelihood, observations=observations, delta=delta
+                f=self._maximize_log_likelihood,
+                observations=observations,
+                delta=delta,
+                starting_value=starting_value,
+                n_trials=n_trials,
             )
         elif method == "parametric_bootstrap":
             self._compute_parametric_bootstrap(
@@ -612,7 +642,7 @@ class ABCStochasticProcess(abc.ABC):
             )
 
     @staticmethod
-    def _validate_observations(observations: pd.DataFrame) -> pd.DataFrame:
+    def _validate_observations(observations: pd.DataFrame | pl.DataFrame) -> pd.DataFrame:
         """
         Validate the observations input
 
@@ -625,6 +655,8 @@ class ABCStochasticProcess(abc.ABC):
         """
         if isinstance(observations, (np.ndarray, list, dict)):
             observations = pd.DataFrame(observations)
+        elif isinstance(observations, pl.DataFrame):
+            observations = observations.to_pandas()
         elif isinstance(observations, pd.Series):
             observations = observations.to_frame()
 
