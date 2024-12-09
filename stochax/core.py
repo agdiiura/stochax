@@ -275,8 +275,17 @@ class ABCStochasticProcess(abc.ABC):
         """
         m = sys.maxsize / 2
         bounds = [(-m, m) for _ in range(len(self.parameters))]
+
         if starting_value is None:
-            starting_value = {parameter: 0 for parameter in self.parameters.keys()}
+            scaling = {parameter: (0.0, 1.0) for parameter in self.parameters}
+
+        elif isinstance(starting_value, dict):
+            scaling = {
+                k: (v, v / 2 if v != 0 else 1.0) for k, v in starting_value.items()
+            }
+
+        else:
+            raise TypeError("starting_value is a dict")
 
         best_result = None
         best_ll = np.inf
@@ -288,8 +297,8 @@ class ABCStochasticProcess(abc.ABC):
 
         for _ in range(n_trials):
             it = (
-                starting_value[parameter] + rv.rvs()
-                for rv, parameter in zip(rv_list, self.parameters.keys())
+                mu + sigma * rv.rvs()
+                for rv, (_, (mu, sigma)) in zip(rv_list, scaling.items())
             )
 
             result = minimize(
