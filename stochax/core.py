@@ -256,6 +256,7 @@ class ABCStochasticProcess(abc.ABC):
         delta: float = 1.0,
         n_trials: int = 5,
         starting_value: dict | None = None,
+        n_jobs: int = 2,
     ) -> dict:
         """
         Estimate the process parameter using a numerical procedure.
@@ -271,6 +272,7 @@ class ABCStochasticProcess(abc.ABC):
             delta: sampling interval
             n_trials: number of trials for different starting points
             starting_value: initial point for the numerical estimation
+            n_jobs: number of parallel jobs
 
         """
         m = sys.maxsize / 2
@@ -287,35 +289,43 @@ class ABCStochasticProcess(abc.ABC):
         else:
             raise TypeError("starting_value is a dict")
 
-        best_result = None
-        best_ll = np.inf
         rv_list = list()
         for itm in bounds:
             rv = truncnorm(a=itm[0], b=itm[1])
             rv.random_state = self._rng
             rv_list.append(rv)
 
-        for _ in range(n_trials):
-            it = (
-                mu + sigma * rv.rvs()
-                for rv, (_, (mu, sigma)) in zip(rv_list, scaling.items())
+        x0s = [
+            np.array(
+                [
+                    mu + sigma * rv.rvs()
+                    for rv, (_, (mu, sigma)) in zip(rv_list, scaling.items())
+                ]
             )
+            for _ in range(n_trials)
+        ]
 
-            result = minimize(
-                objective,
-                x0=np.fromiter(it, float),
-                args=(self.__class__, observations, delta),
-                bounds=bounds,
-                method="Powell",
-            )
+        results = Parallel(n_jobs=n_jobs)(
+            delayed(
+                lambda x: minimize(
+                    objective,
+                    x0=x,
+                    args=(self.__class__, observations, delta),
+                    bounds=bounds,
+                    method="Powell",
+                )
+            )(x0)
+            for x0 in x0s
+        )
 
-            if result.success:
-                if result.fun < best_ll:
-                    best_ll = result.fun
-                    best_result = result
-
-        if best_result is None:
+        results = sorted(
+            filter(lambda r: (r.success and np.isfinite(r.fun)), results),
+            key=lambda r: r.fun,
+        )
+        if len(results) == 0:
             raise RuntimeError("Numerical optimization not performed.")
+
+        best_result = results[0]
 
         return {
             parameter: val
@@ -461,7 +471,7 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
-        n_trials: int = 5,
+        n_trials: int = 8,
         starting_value: dict | None = None,
     ) -> CalibrationResult:
         """
@@ -568,7 +578,7 @@ class ABCStochasticProcess(abc.ABC):
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
         starting_value: list | None = None,
-        n_trials: int = 5,
+        n_trials: int = 8,
     ):
         """
         Calibrate the stochastic process and store parameters as attribute
@@ -627,6 +637,7 @@ class ABCStochasticProcess(abc.ABC):
                 delta=delta,
                 starting_value=starting_value,
                 n_trials=n_trials,
+                n_jobs=n_jobs,
             )
         elif method == "parametric_bootstrap":
             self._compute_parametric_bootstrap(
