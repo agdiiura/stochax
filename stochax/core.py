@@ -662,7 +662,7 @@ class ABCStochasticProcess(abc.ABC):
             )
 
     @staticmethod
-    def _validate_observations(observations: pd.DataFrame | pl.DataFrame) -> pd.DataFrame:
+    def _validate_observations(observations: Any) -> pd.DataFrame:
         """
         Validate the observations input
 
