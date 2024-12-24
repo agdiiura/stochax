@@ -254,7 +254,7 @@ class ABCStochasticProcess(abc.ABC):
         self,
         observations: pd.DataFrame,
         delta: float = 1.0,
-        n_trials: int = 5,
+        n_trials: int = 8,
         starting_value: dict | None = None,
         n_jobs: int = 2,
     ) -> dict:

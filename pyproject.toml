@@ -49,9 +49,6 @@ docs = [
     "mkdocstrings[python]>=0.25.0"
 ]
 
-[tool.setuptools]
-py-modules = []
-
 [tool.ruff]
 src = ['stochax']
 line-length = 90
