@@ -24,7 +24,8 @@ dependencies = [
     "scikit-learn>=1.4.0",
     "scipy>=1.12.0",
     "arch>=6.3.0",
-    "pydantic>=2.5.0"
+    "pydantic>=2.5.0",
+    "polars>=1.14.0"
 ]
 
 [project.urls]
@@ -47,6 +48,9 @@ docs = [
     "mkdocs>=1.6.0",
     "mkdocstrings[python]>=0.25.0"
 ]
+
+[tool.setuptools]
+py-modules = []
 
 [tool.ruff]
 src = ['stochax']
