@@ -35,7 +35,7 @@ Repository = "https://github.com/agdiiura/stochax.git"
 
 [project.optional-dependencies]
 build = [
-    "ruff>=0.6.1",
+    "ruff>=0.9.0",
     "colorama>=0.4.6",
     "coverage>=7.0",
     "isort>=5.12.0",
