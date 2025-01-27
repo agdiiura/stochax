@@ -33,6 +33,7 @@ from inspect import signature
 
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from joblib import Parallel, delayed
 from pydantic import BaseModel, ValidationError
@@ -49,7 +50,7 @@ logger = logging.getLogger(__name__)
 def objective(
     params: list,
     process: Any | None = None,
-    observations: pd.DataFrame | None = None,
+    observations: pd.DataFrame | pl.DataFrame | None = None,
     delta: float = 1.0,
 ) -> float:
     """
@@ -250,7 +251,12 @@ class ABCStochasticProcess(abc.ABC):
         pass
 
     def _maximize_log_likelihood(
-        self, observations: pd.DataFrame, delta: float = 1.0, n_trials: int = 5
+        self,
+        observations: pd.DataFrame,
+        delta: float = 1.0,
+        n_trials: int = 8,
+        starting_value: dict | None = None,
+        n_jobs: int = 2,
     ) -> dict:
         """
         Estimate the process parameter using a numerical procedure.
@@ -265,44 +271,70 @@ class ABCStochasticProcess(abc.ABC):
             observations: column indicates the path and rows indicates the observations
             delta: sampling interval
             n_trials: number of trials for different starting points
+            starting_value: initial point for the numerical estimation
+            n_jobs: number of parallel jobs
 
         """
         m = sys.maxsize / 2
         bounds = [(-m, m) for _ in range(len(self.parameters))]
 
-        best_result = None
-        best_ll = np.inf
+        if starting_value is None:
+            scaling = {parameter: (0.0, 1.0) for parameter in self.parameters}
+
+        elif isinstance(starting_value, dict):
+            scaling = {
+                k: (v, v / 2 if v != 0 else 1.0) for k, v in starting_value.items()
+            }
+
+        else:
+            raise TypeError("starting_value is a dict")
+
         rv_list = list()
         for itm in bounds:
             rv = truncnorm(a=itm[0], b=itm[1])
             rv.random_state = self._rng
             rv_list.append(rv)
 
-        for _ in range(n_trials):
-            it = (rv.rvs() for rv in rv_list)
-
-            result = minimize(
-                objective,
-                x0=np.fromiter(it, float),
-                args=(self.__class__, observations, delta),
-                bounds=bounds,
-                method="Powell",
+        x0s = [
+            np.array(
+                [
+                    mu + sigma * rv.rvs()
+                    for rv, (_, (mu, sigma)) in zip(rv_list, scaling.items())
+                ]
             )
+            for _ in range(n_trials)
+        ]
 
-            if result.success:
-                if result.fun < best_ll:
-                    best_ll = result.fun
-                    best_result = result
+        results = Parallel(n_jobs=n_jobs)(
+            delayed(
+                lambda x: minimize(
+                    objective,
+                    x0=x,
+                    args=(self.__class__, observations, delta),
+                    bounds=bounds,
+                    method="Powell",
+                )
+            )(x0)
+            for x0 in x0s
+        )
 
-        if best_result is None:
+        results = sorted(
+            filter(lambda r: (r.success and np.isfinite(r.fun)), results),
+            key=lambda r: r.fun,
+        )
+        if len(results) == 0:
             raise RuntimeError("Numerical optimization not performed.")
+
+        best_result = results[0]
 
         return {
             parameter: val
             for parameter, val in zip(self.parameters.keys(), best_result.x)
         }
 
-    def _compute_mle(self, f: Callable, observations: pd.DataFrame, delta: float = 1.0):
+    def _compute_mle(
+        self, f: Callable, observations: pd.DataFrame, delta: float = 1.0, **kwargs
+    ):
         """
         Set coefficients to mle estimators. Coefficients_std remains None
 
@@ -310,10 +342,11 @@ class ABCStochasticProcess(abc.ABC):
             f: estimate function
             observations: column indicates the path and rows indicates the observations
             delta: sampling interval
+            kwargs: additional parameters used by the function `f`
 
         """
 
-        estimated_params = f(observations, delta)
+        estimated_params = f(observations, delta, **kwargs)
 
         for parameter, val in estimated_params.items():
             if parameter not in self.parameters.keys():
@@ -438,6 +471,8 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
+        n_trials: int = 8,
+        starting_value: dict | None = None,
     ) -> CalibrationResult:
         """
         Calibrate the parameters of the stochastic process using various estimation methods.
@@ -487,6 +522,9 @@ class ABCStochasticProcess(abc.ABC):
                 for non-parametric bootstrap
             n_boot_resamples: The number of bootstrap resamples to perform during calibration
             n_jobs: The number of parallel jobs to use during calibration
+            starting_value: initial value used in the numerical calibration procedue, if not
+                provided a random guess is performed
+            n_trials: number of numerical trials in the numerical mle
 
         Returns:
             An object that stores the results of the calibration procedure, including the calibrated
@@ -515,6 +553,8 @@ class ABCStochasticProcess(abc.ABC):
             method=method,
             n_boot_resamples=n_boot_resamples,
             n_jobs=n_jobs,
+            n_trials=n_trials,
+            starting_value=starting_value,
         )
         # test if parameters are well-defined
         self._validate_parameters()
@@ -537,6 +577,8 @@ class ABCStochasticProcess(abc.ABC):
         method: str = "mle",
         n_boot_resamples: int = 1000,
         n_jobs: int = 2,
+        starting_value: list | None = None,
+        n_trials: int = 8,
     ):
         """
         Calibrate the stochastic process and store parameters as attribute
@@ -562,6 +604,9 @@ class ABCStochasticProcess(abc.ABC):
             method: choices are 'mle', 'pseudo_mle', 'parametric_bootstrap', 'non_parametric_bootstrap'
             n_boot_resamples: number bootstrap resamples
             n_jobs: number of parallel jobs
+            starting_value: initial value used in the numerical calibration procedue, if not
+                provided a random guess is performed
+            n_trials: number of numerical trials in the numerical mle
 
         """
 
@@ -587,7 +632,12 @@ class ABCStochasticProcess(abc.ABC):
             self._compute_mle(f=f_mle, observations=observations, delta=delta)
         elif method == "numerical_mle":
             self._compute_mle(
-                f=self._maximize_log_likelihood, observations=observations, delta=delta
+                f=self._maximize_log_likelihood,
+                observations=observations,
+                delta=delta,
+                starting_value=starting_value,
+                n_trials=n_trials,
+                n_jobs=n_jobs,
             )
         elif method == "parametric_bootstrap":
             self._compute_parametric_bootstrap(
@@ -612,7 +662,7 @@ class ABCStochasticProcess(abc.ABC):
             )
 
     @staticmethod
-    def _validate_observations(observations: pd.DataFrame) -> pd.DataFrame:
+    def _validate_observations(observations: Any) -> pd.DataFrame:
         """
         Validate the observations input
 
@@ -625,6 +675,8 @@ class ABCStochasticProcess(abc.ABC):
         """
         if isinstance(observations, (np.ndarray, list, dict)):
             observations = pd.DataFrame(observations)
+        elif isinstance(observations, pl.DataFrame):
+            observations = observations.to_pandas()
         elif isinstance(observations, pd.Series):
             observations = observations.to_frame()
 
