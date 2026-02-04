@@ -221,18 +221,24 @@ class TestStochasticProcess(unittest.TestCase):
             process.calibrate(self.observations.head(1))
 
         for kw in self.calibrate_kwargs:
-            r = process.calibrate(observations=self.observations, n_jobs=N_JOBS, **kw)
+            try:
+                r = process.calibrate(observations=self.observations, n_jobs=N_JOBS, **kw)
+            except ValidationError as e:
+                self.fail(
+                    f"ValidationError {e} raised unexpectedly using parameters: {kw}"
+                )
+
             for key, val in process.parameters.items():
-                self.assertIsInstance(val, float, msg=f'Error in {kw["method"]}')
+                self.assertIsInstance(val, float, msg=f"Error in {kw['method']}")
                 self.assertTrue(pd.notnull(val))
 
             self.assertIsInstance(r, CalibrationResult)
 
             if VERBOSE:
                 print(
-                    f'\n#############################'
-                    f'\nUsing method `{kw["method"]}`\n'
-                    f'Estimated process:\n{process}'
+                    f"\n#############################"
+                    f"\nUsing method `{kw['method']}`\n"
+                    f"Estimated process:\n{process}"
                 )
                 print(
                     "\n".join(
