@@ -51,8 +51,8 @@ docs = [
     "mkdocstrings[python]>=0.25.0"
 ]
 
-[tool.setuptools.packages.find]
-where = ["stochax"]
+[tool.setuptools.packages]
+find = {}
 
 
 [tool.ruff]
