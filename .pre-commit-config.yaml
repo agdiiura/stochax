@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
@@ -22,7 +22,7 @@ repos:
         args: [ '--fix=lf' ]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.9.3
+    rev: v0.15.0
     hooks:
       # Run the linter.
       - id: ruff
@@ -30,16 +30,16 @@ repos:
       # Run the formatter.
       - id: ruff-format
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 7.0.0
     hooks:
       - id: isort
   - repo: https://github.com/asottile/setup-cfg-fmt
-    rev: v2.7.0
+    rev: v3.2.0
     hooks:
     - id: setup-cfg-fmt
       args: [--max-py-version=3.10]
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.0
+    rev: v2.4.1
     hooks:
     - id: codespell
       additional_dependencies:

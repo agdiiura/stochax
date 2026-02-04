@@ -196,7 +196,7 @@ class CalibrationResult(object):
             * n_observations: number of records used to estimate the parameters
             * AIC: Akaike information criterion
             * BIC: Bayesian information criterion
-            * HQC: Hannan–Quinn information criterion
+            * HQC: Hannan-Quinn information criterion
 
         Returns:
             Information about the fit.
